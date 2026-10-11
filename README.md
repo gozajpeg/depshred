@@ -127,6 +127,7 @@ Instead, `depshred` targets the **most common sources of accidental bloat**: leg
 | **`mkdirp`** | `fs.mkdirSync()` / `fs.mkdir()` | Node 10.12+ | `fs.mkdirSync(path, { recursive: true })` |
 | **`nodemon`** | `node --watch` | Node 18.11+ | `node --watch app.js` |
 | **`axios`** | `fetch()` | Node 18+ | Native `fetch` and `AbortController` |
+| **`node-fetch`** | `fetch()` | Node 18+ | Native `fetch` and `AbortController` |
 | **`glob`** | `fs.glob()` | Node 22+ | Native file matching in `node:fs` |
 | **`querystring`** | `URLSearchParams` | Node 10+ | Built-in `URLSearchParams` |
 

@@ -33,7 +33,7 @@ ${pc.bold('EXAMPLES:')}
   npx depshred
   npx depshred --check
   npx depshred --init-skill cursor
-  npx depshred ./packages/api --json
+  npx depshred ./path/to/your-project --json
 `;
 
 export async function run(rawArgs = []) {

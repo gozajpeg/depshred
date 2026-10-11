@@ -1,4 +1,4 @@
-﻿import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -66,7 +66,7 @@ export async function fetchPackageMetadata(packageName, timeoutMs = 4000) {
       signal: controller.signal,
       headers: {
         Accept: 'application/json',
-        'User-Agent': 'depshred-audit/1.0.0'
+        'User-Agent': 'depshred-audit/1.0.2'
       }
     });
 
