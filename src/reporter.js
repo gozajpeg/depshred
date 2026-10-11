@@ -9,7 +9,7 @@ export function printScorecard(auditData, options = {}) {
 
   console.log('');
   console.log(pc.bold(pc.white('+--------------------------------------------------------------------------+')));
-  console.log(pc.bold(pc.white(`| depshred v1.0.1 (Target Node: ${targetNode})`)));
+  console.log(pc.bold(pc.white(`| depshred v1.0.2 (Target Node: ${targetNode})`)));
   console.log(pc.bold(pc.white(`| Project: ${projectName} (${totalDependencies} dependencies scanned)`)));
   console.log(pc.bold(pc.white('+--------------------------------------------------------------------------+')));
 

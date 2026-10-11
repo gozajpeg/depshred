@@ -11,7 +11,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/run_with-npx_depshred-111111?style=flat-square" alt="Run with npx">
   <img src="https://img.shields.io/badge/node.js-18%2B_%7C_20%2B_%7C_22%2B-111111?style=flat-square" alt="Node Support">
-  <img src="https://img.shields.io/badge/version-1.0.1-111111?style=flat-square" alt="version 1.0.0">
+  <img src="https://img.shields.io/badge/version-1.0.2-111111?style=flat-square" alt="version 1.0.0">
   <img src="https://img.shields.io/badge/license-MIT-111111?style=flat-square" alt="MIT license">
 </p>
 
@@ -60,7 +60,7 @@ You get an easy list you can move through with your arrow keys:
 
 ```text
 +--------------------------------------------------------------------------+
-| depshred v1.0.1 (Node v20.12.0)                                          |
+| depshred v1.0.2 (Node v20.12.0)                                          |
 | Target: ./my-project                                                     |
 +--------------------------------------------------------------------------+
 | Total Scanned: 24 dependencies                                           |
@@ -107,6 +107,42 @@ It checks npm to see how big each package is and whether anyone has touched it i
  Use Node built-ins      Safe to delete    Good to know
  (saves disk space)     (npm uninstall)   (see how big it is)
 ```
+
+
+---
+
+## What packages can depshred replace?
+
+To be completely honest: no tool can replace every single package in the world. Node does not have a built-in 3D engine to replace `three.js` or a built-in database to replace `pg`.
+
+Instead, `depshred` targets the **most common sources of accidental bloat**: legacy packages that modern Node already includes for free, and heavy monolithic libraries with modern lightweight replacements.
+
+### 1. Modern Node.js built-ins (Zero packages needed)
+
+| Legacy Package | Built-in Node Feature | Supported in | What replaces it |
+| :--- | :--- | :--- | :--- |
+| **`dotenv`** | `--env-file` | Node 20.6+ | `node --env-file=.env app.js` |
+| **`uuid`** | `crypto.randomUUID()` | Node 14.17+ / 16.7+ | `crypto.randomUUID()` |
+| **`rimraf`** | `fs.rmSync()` / `fs.rm()` | Node 14.14+ | `fs.rmSync(path, { recursive: true, force: true })` |
+| **`mkdirp`** | `fs.mkdirSync()` / `fs.mkdir()` | Node 10.12+ | `fs.mkdirSync(path, { recursive: true })` |
+| **`nodemon`** | `node --watch` | Node 18.11+ | `node --watch app.js` |
+| **`axios`** | `fetch()` | Node 18+ | Native `fetch` and `AbortController` |
+| **`glob`** | `fs.glob()` | Node 22+ | Native file matching in `node:fs` |
+| **`querystring`** | `URLSearchParams` | Node 10+ | Built-in `URLSearchParams` |
+
+### 2. Lightweight modern alternatives
+
+| Heavy Package | Suggested Alternative | What you save |
+| :--- | :--- | :--- |
+| **`zod`** | `valibot` or `arktype` | Saves ~5.5 MB unpacked (~90% bundle size reduction) |
+| **`moment`** | `dayjs` or native `Intl` | Saves ~4 MB unpacked |
+| **`lodash`** | `es-toolkit` or modern JS | Saves ~1.5 MB unpacked |
+| **`chalk`** | `picocolors` | Saves ~100 KB and drops dependency chain |
+| **`classnames`** | `clsx` | Drop-in API, faster, zero dependencies |
+| **`bcrypt`** | `bcryptjs` or native `crypto` | Removes heavy C++ `node-gyp` build tools |
+| **`deep-equal`** | `fast-deep-equal` | Sub-1KB, faster comparisons |
+
+> *Everything else in your project is still scanned for 0-import unused packages, heavy sizes (>5MB), and unmaintained/abandoned code (>3 years old).*
 
 ---
 
