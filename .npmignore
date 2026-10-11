@@ -1,0 +1,13 @@
+﻿# Internal planning & personal agent instructions
+PLAN.md
+AGENT.md
+ROADMAP.md
+
+# Development and testing files
+.github/
+.cursor/
+.windsurf/
+.agents/
+.clinerules
+.windsurfrules
+*.log

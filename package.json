@@ -1,0 +1,49 @@
+{
+  "name": "depshred",
+  "version": "1.0.0",
+  "description": "Shred dependency bloat. Embrace modern Node.",
+  "type": "module",
+  "main": "./src/cli.js",
+  "bin": {
+    "depshred": "bin/depshred.js"
+  },
+  "files": [
+    "bin",
+    "src",
+    "skills",
+    "README.md",
+    "CHANGELOG.md",
+    "SKILLS.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "scripts": {
+    "start": "node ./bin/depshred.js",
+    "test": "node --test test/*.test.js"
+  },
+  "keywords": [
+    "dependencies",
+    "audit",
+    "bloat",
+    "unused-dependencies",
+    "cli",
+    "e18e",
+    "nodejs",
+    "npm"
+  ],
+  "author": "gozajpeg",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/gozajpeg/depshred.git"
+  },
+  "bugs": {
+    "url": "https://github.com/gozajpeg/depshred/issues"
+  },
+  "homepage": "https://github.com/gozajpeg/depshred#readme",
+  "dependencies": {
+    "picocolors": "^1.1.1"
+  }
+}

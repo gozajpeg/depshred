@@ -1,0 +1,55 @@
+﻿# depshred: Agent Dependency Hygiene & Pre-Flight Vetting
+
+When an agent is tasked with adding functionality to a Node.js project, it MUST NOT blindly run `npm install <package>`. Follow this mandatory 4-step pre-flight vetting order:
+
+---
+
+## Step 0: The Native Standard Library Check (Zero Packages)
+
+Before reaching for npm, verify if modern Node.js already includes this functionality natively:
+
+| Wanted Functionality | DO NOT Install | USE INSTEAD (Node Standard Library) | Minimum Node |
+| :--- | :--- | :--- | :--- |
+| Environment variables | `dotenv` | Native CLI flag `node --env-file=.env` | Node 20.6.0+ |
+| UUID generation | `uuid` | `crypto.randomUUID()` from `node:crypto` | Node 15.6.0+ |
+| Recursive folder deletion | `rimraf` | `fs.rmSync(path, { recursive: true, force: true })` | Node 14.14.0+ |
+| Recursive directory creation | `mkdirp` | `fs.mkdirSync(path, { recursive: true })` | Node 10.12.0+ |
+| Development file watching | `nodemon` | `node --watch server.js` | Node 18.11.0+ |
+| HTTP requests | `axios`, `node-fetch` | Native global `fetch()` | Node 18.0.0+ |
+| File glob matching | `glob` | `fs.globSync(pattern)` from `node:fs` | Node 22.0.0+ |
+| URL query parameters | `querystring` | `URLSearchParams` / `new URL()` | Node 10.0.0+ |
+
+If the target Node version supports the native feature, **do not install any package**. Write the native implementation directly.
+
+---
+
+## Step 1: The Existing Codebase & Unused Dependency Check
+
+Before adding any package, inspect what is already in the project:
+1. **Check for Unused Packages:** Grep `package.json` against project imports. If dead, unimported dependencies exist, note them for cleanup rather than adding more clutter.
+2. **Reuse Existing Dependencies:** If a library is already installed (e.g. `fastify`, utility libraries), leverage its built-in modules instead of adding a competing package.
+3. **Check Internal Utilities:** Check `src/utils/` or shared helpers. Never add an external dependency for logic that already exists in the codebase.
+
+---
+
+## Step 2: Vetting New Dependencies (When an install is truly necessary)
+
+If no native API or existing helper exists, vet the candidate package before running install:
+1. **Check Maintenance & Dormancy:**
+   - Avoid packages that have not published updates in >3 years, unless they are confirmed feature-complete, zero-dependency modules (e.g. self-contained parsers).
+   - Check for official npm deprecation warnings.
+2. **Check Transitive Dependency Fan-out:** Prefer zero-dependency or single-purpose packages over monolithic bundles that pull in dozens of nested sub-dependencies.
+3. **Prefer Modern Lightweight Equivalents:**
+   - Date manipulation: Use native `Intl.DateTimeFormat`, `date-fns`, or `dayjs` over legacy `moment`.
+   - Terminal styling: Use `picocolors` (sub-7KB, zero dependencies) over heavy `chalk` chains.
+   - Utility helpers: Use native ES6+ methods (`map`, `filter`, `structuredClone`) or `es-toolkit` over monolithic `lodash`.
+   - Password hashing: Prefer native `crypto.scrypt` or pure JS `bcryptjs` over packages requiring node-gyp C++ compilation unless explicitly required for performance.
+
+---
+
+## Step 3: Post-Change Verification
+
+After adding or removing dependencies:
+1. Verify `package.json` and lockfile are clean and committed.
+2. Run project tests or `node --check` to ensure no broken imports remain.
+3. If `depshred` is available, run `npx depshred --check` to verify that no new dependency bloat or unused packages were introduced.

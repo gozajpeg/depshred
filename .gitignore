@@ -1,0 +1,12 @@
+﻿# Dependencies
+node_modules/
+
+# Internal planning & personal agent operating instructions
+PLAN.md
+AGENT.md
+ROADMAP.md
+
+# Operating System & IDE local state
+.DS_Store
+Thumbs.db
+*.log
