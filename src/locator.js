@@ -157,7 +157,76 @@ export async function locateImports(rootDir, declaredDependencies = [], scripts 
     }
   }
 
-  // Rule 3: Scan root configuration files for package names and plugin/preset references
+  // Rule 3: Bundler, linter, and build configuration plugins
+  for (const pkg of declaredDependencies) {
+    if (
+      pkg.startsWith('@vitejs/plugin-') ||
+      pkg.startsWith('vite-plugin-') ||
+      pkg.startsWith('@rollup/plugin-') ||
+      pkg.startsWith('rollup-plugin-') ||
+      pkg.startsWith('@rolldown/plugin-') ||
+      pkg.endsWith('-webpack-plugin') ||
+      pkg.startsWith('eslint-config-') ||
+      pkg.startsWith('eslint-plugin-') ||
+      pkg.startsWith('@eslint/') ||
+      pkg.startsWith('prettier-plugin-')
+    ) {
+      importedSet.add(pkg);
+      if (!importsMap.has(pkg)) importsMap.set(pkg, []);
+      importsMap.get(pkg).push({
+        file: 'package.json',
+        line: 1,
+        snippet: 'Bundler or linter build plugin'
+      });
+    }
+  }
+
+  // Rule 4: Compiler engines and toolchain infrastructure
+  // Babel toolchain detection: @babel/core, plugins, presets, react-compiler
+  const hasBabelTool = declaredDependencies.some((p) =>
+    p.includes('babel') || p === '@vitejs/plugin-react' || p.includes('react-compiler')
+  );
+  if (hasBabelTool) {
+    for (const pkg of declaredDependencies) {
+      if (
+        pkg === '@babel/core' ||
+        pkg === '@babel/runtime' ||
+        pkg.startsWith('babel-plugin-') ||
+        pkg.startsWith('@babel/plugin-') ||
+        pkg.startsWith('babel-preset-') ||
+        pkg.startsWith('@babel/preset-') ||
+        pkg.includes('plugin-babel')
+      ) {
+        importedSet.add(pkg);
+        if (!importsMap.has(pkg)) importsMap.set(pkg, []);
+        importsMap.get(pkg).push({
+          file: 'package.json',
+          line: 1,
+          snippet: 'Babel compiler infrastructure / plugin'
+        });
+      }
+    }
+  }
+
+  // PostCSS toolchain detection: postcss, autoprefixer, tailwindcss
+  const hasPostcssTool = declaredDependencies.some((p) =>
+    p.includes('postcss') || p === 'tailwindcss' || p === 'autoprefixer'
+  );
+  if (hasPostcssTool) {
+    for (const pkg of declaredDependencies) {
+      if (pkg === 'postcss' || pkg.startsWith('postcss-')) {
+        importedSet.add(pkg);
+        if (!importsMap.has(pkg)) importsMap.set(pkg, []);
+        importsMap.get(pkg).push({
+          file: 'package.json',
+          line: 1,
+          snippet: 'PostCSS compiler infrastructure / plugin'
+        });
+      }
+    }
+  }
+
+  // Rule 5: Scan root configuration files for package names and plugin/preset references
   const rootConfigFiles = await getRootConfigFiles(rootDir);
   for (const configName of rootConfigFiles) {
     let content;
@@ -174,7 +243,7 @@ export async function locateImports(rootDir, declaredDependencies = [], scripts 
       const escaped = pkg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       const directRegex = new RegExp(`['"]${escaped}['"]|\\b${escaped}\\b`);
 
-      // Shorthand matches for common config tools (e.g. "react" for "eslint-plugin-react" or "react-app" for "eslint-config-react-app")
+      // Shorthand matches for common config tools
       let shorthandMatch = false;
       if (configName.includes('eslint')) {
         const eslintPlugin = pkg.replace(/^eslint-plugin-/, '');
@@ -200,7 +269,7 @@ export async function locateImports(rootDir, declaredDependencies = [], scripts 
     }
   }
 
-  // Rule 4: Scan package.json scripts for CLI tool references (e.g. nodemon, rimraf, tsc, prettier)
+  // Rule 6: Scan package.json scripts for CLI tool references (e.g. nodemon, rimraf, tsc, prettier)
   for (const [scriptName, scriptCmd] of Object.entries(scripts)) {
     if (typeof scriptCmd !== 'string') continue;
     for (const pkg of declaredDependencies) {
@@ -220,7 +289,7 @@ export async function locateImports(rootDir, declaredDependencies = [], scripts 
     }
   }
 
-  // Rule 5: Scan project source files for import / require / export from
+  // Rule 7: Scan project source files for import / require / export from
   for (const filePath of sourceFiles) {
     let content;
     try {

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { resolve } from 'node:path';
 import { auditProject } from '../src/audit.js';
-import { getNativeRule, compareVersions } from '../src/rules/index.js';
+import { getNativeRule, getAltRule, compareVersions } from '../src/rules/index.js';
 
 test('compareVersions accurately compares semantic versions', () => {
   assert.equal(compareVersions('20.6.0', '18.0.0'), 1);
@@ -96,4 +96,21 @@ test('locateImports ignores depshred self and recognizes ambient @types', async 
   assert.ok(importsMap.has('depshred'), 'depshred should self-ignore');
   assert.ok(importsMap.has('@types/node'), '@types/node should be recognized as ambient type');
   assert.deepEqual(unusedPackages, ['really-unused'], 'only really-unused should be unused');
+});
+
+test('locateImports recognizes Babel compiler infrastructure and plugins', async () => {
+  const { locateImports } = await import('../src/locator.js');
+  const deps = ['@rolldown/plugin-babel', '@babel/core', 'babel-plugin-react-compiler', 'unused-lib'];
+  const { importsMap, unusedPackages } = await locateImports('.', deps, {});
+
+  assert.ok(importsMap.has('@babel/core'), '@babel/core should be recognized as compiler engine');
+  assert.ok(importsMap.has('babel-plugin-react-compiler'), 'babel-plugin-react-compiler should be recognized');
+  assert.deepEqual(unusedPackages, ['unused-lib'], 'only unused-lib should be unused');
+});
+
+test('getAltRule recommends valibot for zod', () => {
+  const rule = getAltRule('zod');
+  assert.ok(rule, 'zod should have an alternative rule');
+  assert.equal(rule.lighter, 'valibot');
+  assert.ok(rule.description.includes('valibot'));
 });
