@@ -1,7 +1,7 @@
 import { readdir, readFile, stat } from 'node:fs/promises';
-import { join, relative, extname } from 'node:path';
+import { join, relative, extname, basename } from 'node:path';
 
-const SUPPORTED_EXTENSIONS = new Set(['.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx']);
+const SUPPORTED_EXTENSIONS = new Set(['.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx', '.vue', '.svelte']);
 const IGNORED_DIRECTORIES = new Set([
   'node_modules',
   '.git',
@@ -16,6 +16,25 @@ const IGNORED_DIRECTORIES = new Set([
   '.github',
   '.windsurf'
 ]);
+
+const CONFIG_FILE_PATTERNS = [
+  /^\.babelrc(\.json|\.js|\.cjs|\.mjs)?$/,
+  /^babel\.config(\.json|\.js|\.cjs|\.mjs)?$/,
+  /^\.eslintrc(\.json|\.js|\.cjs|\.yaml|\.yml)?$/,
+  /^eslint\.config(\.js|\.mjs|\.cjs)?$/,
+  /^\.prettierrc(\.json|\.js|\.cjs|\.yaml|\.yml)?$/,
+  /^prettier\.config(\.js|\.mjs|\.cjs)?$/,
+  /^tsconfig(\..+)?\.json$/,
+  /^jsconfig(\..+)?\.json$/,
+  /^postcss\.config(\.js|\.cjs|\.mjs|\.json)?$/,
+  /^tailwind\.config(\.js|\.cjs|\.mjs|\.ts)?$/,
+  /^vite\.config(\.js|\.ts|\.mjs)?$/,
+  /^webpack\.config(\.js|\.cjs|\.mjs|\.ts)?$/,
+  /^rollup\.config(\.js|\.mjs)?$/,
+  /^next\.config(\.js|\.mjs|\.ts)?$/,
+  /^jest\.config(\.js|\.ts|\.json)?$/,
+  /^vitest\.config(\.js|\.ts)?$/
+];
 
 /**
  * Normalizes an import specifier to its root npm package name.
@@ -80,10 +99,34 @@ async function getSourceFiles(dir) {
 }
 
 /**
- * Scan project source files to locate package imports and detect unused dependencies.
+ * Find root-level config files in a directory.
+ */
+async function getRootConfigFiles(dir) {
+  const configFiles = [];
+  let entries;
+  try {
+    entries = await readdir(dir, { withFileTypes: true });
+  } catch {
+    return configFiles;
+  }
+
+  for (const entry of entries) {
+    if (entry.isFile()) {
+      const name = entry.name.toLowerCase();
+      if (CONFIG_FILE_PATTERNS.some((pat) => pat.test(name))) {
+        configFiles.push(entry.name);
+      }
+    }
+  }
+  return configFiles;
+}
+
+/**
+ * Scan project source files and config files to locate package imports and detect unused dependencies.
  *
  * @param {string} rootDir - Root directory of the project
  * @param {string[]} declaredDependencies - List of package names from package.json
+ * @param {object} scripts - package.json scripts object
  * @returns {Promise<{ importsMap: Map<string, Array<{file: string, line: number, snippet: string}>>, unusedPackages: string[], scannedFilesCount: number }>}
  */
 export async function locateImports(rootDir, declaredDependencies = [], scripts = {}) {
@@ -91,7 +134,73 @@ export async function locateImports(rootDir, declaredDependencies = [], scripts 
   const importsMap = new Map();
   const importedSet = new Set();
 
-  // Scan package.json scripts for CLI tool references (e.g. nodemon, rimraf)
+  // Rule 1: Always ignore depshred itself (never flag depshred as unused within a project)
+  if (declaredDependencies.includes('depshred')) {
+    importedSet.add('depshred');
+    importsMap.set('depshred', [{
+      file: 'package.json',
+      line: 1,
+      snippet: 'depshred CLI dependency auditor'
+    }]);
+  }
+
+  // Rule 2: Ambient TypeScript definitions (@types/*) are used by compiler, never imported in source code
+  for (const pkg of declaredDependencies) {
+    if (pkg.startsWith('@types/')) {
+      importedSet.add(pkg);
+      if (!importsMap.has(pkg)) importsMap.set(pkg, []);
+      importsMap.get(pkg).push({
+        file: 'tsconfig.json',
+        line: 1,
+        snippet: 'TypeScript ambient type definition'
+      });
+    }
+  }
+
+  // Rule 3: Scan root configuration files for package names and plugin/preset references
+  const rootConfigFiles = await getRootConfigFiles(rootDir);
+  for (const configName of rootConfigFiles) {
+    let content;
+    try {
+      content = await readFile(join(rootDir, configName), 'utf8');
+    } catch {
+      continue;
+    }
+
+    for (const pkg of declaredDependencies) {
+      if (importedSet.has(pkg)) continue;
+
+      // Exact package match (quoted or word boundary)
+      const escaped = pkg.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const directRegex = new RegExp(`['"]${escaped}['"]|\\b${escaped}\\b`);
+
+      // Shorthand matches for common config tools (e.g. "react" for "eslint-plugin-react" or "react-app" for "eslint-config-react-app")
+      let shorthandMatch = false;
+      if (configName.includes('eslint')) {
+        const eslintPlugin = pkg.replace(/^eslint-plugin-/, '');
+        const eslintConfig = pkg.replace(/^eslint-config-/, '');
+        if (eslintPlugin !== pkg && new RegExp(`['"]${eslintPlugin}['"]`).test(content)) shorthandMatch = true;
+        if (eslintConfig !== pkg && new RegExp(`['"]${eslintConfig}['"]`).test(content)) shorthandMatch = true;
+      } else if (configName.includes('babel')) {
+        const babelPreset = pkg.replace(/^(@babel\/preset-|babel-preset-)/, '');
+        const babelPlugin = pkg.replace(/^(@babel\/plugin-|babel-plugin-)/, '');
+        if (babelPreset !== pkg && new RegExp(`['"]${babelPreset}['"]`).test(content)) shorthandMatch = true;
+        if (babelPlugin !== pkg && new RegExp(`['"]${babelPlugin}['"]`).test(content)) shorthandMatch = true;
+      }
+
+      if (directRegex.test(content) || shorthandMatch) {
+        importedSet.add(pkg);
+        if (!importsMap.has(pkg)) importsMap.set(pkg, []);
+        importsMap.get(pkg).push({
+          file: configName,
+          line: 1,
+          snippet: `Config reference in ${configName}`
+        });
+      }
+    }
+  }
+
+  // Rule 4: Scan package.json scripts for CLI tool references (e.g. nodemon, rimraf, tsc, prettier)
   for (const [scriptName, scriptCmd] of Object.entries(scripts)) {
     if (typeof scriptCmd !== 'string') continue;
     for (const pkg of declaredDependencies) {
@@ -111,6 +220,7 @@ export async function locateImports(rootDir, declaredDependencies = [], scripts 
     }
   }
 
+  // Rule 5: Scan project source files for import / require / export from
   for (const filePath of sourceFiles) {
     let content;
     try {
@@ -124,7 +234,6 @@ export async function locateImports(rootDir, declaredDependencies = [], scripts 
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
-      // Skip empty or comment-only lines
       const trimmed = line.trim();
       if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) {
         continue;
@@ -152,7 +261,7 @@ export async function locateImports(rootDir, declaredDependencies = [], scripts 
     }
   }
 
-  // Detect unused packages: declared in package.json but never imported in source code
+  // Detect unused packages: declared in package.json but never referenced anywhere
   const unusedPackages = declaredDependencies.filter((pkg) => !importedSet.has(pkg));
 
   return {

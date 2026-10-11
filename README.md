@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/depshred.webp" width="200" alt="depshred logo">
+  <img src="https://raw.githubusercontent.com/gozajpeg/depshred/master/assets/depshred.webp" width="200" alt="depshred logo">
 </p>
 
 <h1 align="center">depshred</h1>
@@ -11,7 +11,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/run_with-npx_depshred-111111?style=flat-square" alt="Run with npx">
   <img src="https://img.shields.io/badge/node.js-18%2B_%7C_20%2B_%7C_22%2B-111111?style=flat-square" alt="Node Support">
-  <img src="https://img.shields.io/badge/version-1.0.0-111111?style=flat-square" alt="version 1.0.0">
+  <img src="https://img.shields.io/badge/version-1.0.1-111111?style=flat-square" alt="version 1.0.0">
   <img src="https://img.shields.io/badge/license-MIT-111111?style=flat-square" alt="MIT license">
 </p>
 
@@ -53,14 +53,14 @@ bunx depshred
 Here is what you see when you run it in your terminal:
 
 <p align="center">
-  <img src="assets/view01.webp" width="100%" alt="depshred terminal interface">
+  <img src="https://raw.githubusercontent.com/gozajpeg/depshred/master/assets/view01.webp" width="100%" alt="depshred terminal interface">
 </p>
 
 You get an easy list you can move through with your arrow keys:
 
 ```text
 +--------------------------------------------------------------------------+
-| depshred v1.0.0 (Node v20.12.0)                                          |
+| depshred v1.0.1 (Node v20.12.0)                                          |
 | Target: ./my-project                                                     |
 +--------------------------------------------------------------------------+
 | Total Scanned: 24 dependencies                                           |

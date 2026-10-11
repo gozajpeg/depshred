@@ -88,3 +88,12 @@ test('locateImports recognizes packages referenced in package.json scripts', asy
   assert.ok(importsMap.has('rimraf'), 'rimraf should be recognized from scripts');
   assert.deepEqual(unusedPackages, ['unused-lib'], 'only unused-lib should be unused');
 });
+
+test('locateImports ignores depshred self and recognizes ambient @types', async () => {
+  const { locateImports } = await import('../src/locator.js');
+  const { importsMap, unusedPackages } = await locateImports('.', ['depshred', '@types/node', 'really-unused'], {});
+
+  assert.ok(importsMap.has('depshred'), 'depshred should self-ignore');
+  assert.ok(importsMap.has('@types/node'), '@types/node should be recognized as ambient type');
+  assert.deepEqual(unusedPackages, ['really-unused'], 'only really-unused should be unused');
+});

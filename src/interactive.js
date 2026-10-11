@@ -29,7 +29,7 @@ export async function runInteractive(auditData) {
     process.stdout.write('\x1b[2J\x1b[3J\x1b[H');
 
     console.log(pc.bold(pc.white('+--------------------------------------------------------------------------+')));
-    console.log(pc.bold(pc.white(`| depshred v1.0.0 (Target Node: ${targetNode})`)));
+    console.log(pc.bold(pc.white(`| depshred v1.0.1 (Target Node: ${targetNode})`)));
     console.log(pc.bold(pc.white(`| Project: ${projectName} (${totalDependencies} dependencies scanned)`)));
     console.log(pc.bold(pc.white('+--------------------------------------------------------------------------+')));
     console.log(pc.red(`| [CRITICAL] ${summary.critical} native replacements (saves ~${formatBytes(totalSaveableBytes)})`));
@@ -41,27 +41,70 @@ export async function runInteractive(auditData) {
 
     if (inspecting) {
       const item = results[selectedIndex];
-      console.log(pc.bold(`=== INSPECTING: ${item.name} (${item.tier}) ===`));
-      console.log(`Details: ${item.details}`);
-      console.log(`Unpacked Size: ${formatBytes(item.size)}`);
-      console.log(`Sub-dependencies: ${item.dependenciesCount}`);
+      console.log(pc.bold(pc.white('+--------------------------------------------------------------------------+')));
+      console.log(pc.bold(pc.white(`| INSPECTING: ${item.name} (${item.tier})`)));
+      console.log(pc.bold(pc.white('+--------------------------------------------------------------------------+')));
+      console.log(`Summary: ${item.details}`);
+      console.log(`Unpacked Size: ${formatBytes(item.size)} | Sub-dependencies: ${item.dependenciesCount}`);
+      console.log(`Type: ${item.isDev ? 'Development dependency (devDependencies)' : 'Production dependency (dependencies)'}`);
       console.log('');
 
-
-
-      if (item.imports && item.imports.length > 0) {
-        console.log(pc.bold(`Imports found (${item.imports.length}):`));
-        for (const imp of item.imports.slice(0, 5)) {
-          console.log(pc.dim(`  - ${imp.file}:${imp.line} -> ${imp.snippet}`));
+      // Critical items: show Before/After diff and uninstall command
+      if (item.tier === 'CRITICAL') {
+        if (item.diff) {
+          console.log(pc.bold('Replacement Solution (Modern Node.js Built-in):'));
+          console.log(pc.green(item.diff));
+          console.log('');
         }
-        if (item.imports.length > 5) {
-          console.log(pc.dim(`  ... and ${item.imports.length - 5} more`));
-        }
+        console.log(pc.bold('Action:'));
+        console.log(pc.cyan(`  npm uninstall ${item.name}`));
+        console.log(pc.dim(`  Saves ~${formatBytes(item.size)} unpacked disk space.`));
         console.log('');
       }
 
+      // Unused items: show clear uninstall command and ignore instructions
       if (item.tier === 'UNUSED') {
-        console.log(pc.cyan(`Run: npm uninstall ${item.name}`));
+        console.log(pc.bold('Recommended Action:'));
+        console.log(pc.cyan(`  npm uninstall ${item.name}`));
+        console.log(pc.dim(`  Zero imports or config references found in project.`));
+        console.log(pc.dim(`  To permanently ignore, add to package.json: "depshred": { "ignore": ["${item.name}"] }`));
+        console.log('');
+      }
+
+      // Warning items: show lighter alternatives or dormancy details
+      if (item.tier === 'WARN') {
+        if (item.altRule) {
+          console.log(pc.bold('Recommended Lighter Alternative:'));
+          console.log(`  Suggested: ${pc.cyan(item.altRule.lighter)}`);
+          console.log(`  Savings:   ${pc.green(item.altRule.savings)}`);
+          console.log(`  Details:   ${item.altRule.description}`);
+          console.log('');
+        } else if (item.size > 5 * 1024 * 1024) {
+          console.log(pc.bold('Size Optimization Note:'));
+          console.log(pc.yellow(`  Heavy package (${formatBytes(item.size)}). Check if dynamic import() or tree-shaking can reduce bundle weight.`));
+          console.log('');
+        }
+
+        if (item.yearsDormant && item.yearsDormant >= 3) {
+          console.log(pc.bold('Maintenance Assessment:'));
+          if (item.selfContained) {
+            console.log(pc.dim(`  Last update >${item.yearsDormant} years ago, but 0 sub-dependencies (self-contained and stable).`));
+          } else {
+            console.log(pc.yellow(`  Last update >${item.yearsDormant} years ago with ${item.dependenciesCount} sub-dependencies.`));
+          }
+          console.log('');
+        }
+      }
+
+      // Show where imports or references were found
+      if (item.imports && item.imports.length > 0) {
+        console.log(pc.bold(`References in project (${item.imports.length}):`));
+        for (const imp of item.imports.slice(0, 8)) {
+          console.log(pc.dim(`  - ${imp.file}:${imp.line} -> ${imp.snippet}`));
+        }
+        if (item.imports.length > 8) {
+          console.log(pc.dim(`  ... and ${item.imports.length - 8} more references`));
+        }
         console.log('');
       }
 
