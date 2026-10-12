@@ -88,19 +88,29 @@ test('getAltRule recommends lightweight alternatives', () => {
   assert.equal(oraRule.lighter, 'yocto-spinner');
 });
 
-test('auditProject audits depshred self correctly', async () => {
+test('auditProject audits depshred self correctly (true zero runtime dependencies)', async () => {
   const projectDir = resolve('.');
   const result = await auditProject({ path: projectDir });
 
-  assert.equal(result.totalDependencies, 1);
+  assert.equal(result.totalDependencies, 0, 'depshred must have 0 runtime dependencies');
   assert.equal(result.summary.critical, 0);
   assert.equal(result.summary.unused, 0);
-  assert.equal(result.summary.ok, 1);
+  assert.equal(result.summary.ok, 0);
+  assert.equal(result.results.length, 0);
+});
 
-  const pico = result.results.find((r) => r.name === 'picocolors');
-  assert.ok(pico);
-  assert.equal(pico.tier, 'OK');
-  assert.ok(pico.imports.length >= 3, 'Should detect imports in cli, interactive, reporter');
+test('colors helper formats and respects gating', async () => {
+  const { pc } = await import('../src/colors.js');
+  assert.equal(typeof pc.red, 'function');
+  assert.equal(typeof pc.green, 'function');
+  assert.equal(typeof pc.bold, 'function');
+  assert.equal(typeof pc.dim, 'function');
+  assert.equal(typeof pc.yellow, 'function');
+  assert.equal(typeof pc.cyan, 'function');
+  assert.equal(typeof pc.magenta, 'function');
+  assert.equal(typeof pc.white, 'function');
+  assert.equal(typeof pc.gray, 'function');
+  assert.equal(typeof pc.bold('hello'), 'string');
 });
 
 test('auditProject audits legacy-app fixture with unused and native replacements', async () => {

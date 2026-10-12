@@ -1,4 +1,4 @@
-import pc from 'picocolors';
+import pc from './colors.js';
 import readline from 'node:readline';
 import { formatBytes } from './audit.js';
 
@@ -29,7 +29,7 @@ export async function runInteractive(auditData) {
     process.stdout.write('\x1b[2J\x1b[3J\x1b[H');
 
     console.log(pc.bold(pc.white('+--------------------------------------------------------------------------+')));
-    console.log(pc.bold(pc.white(`| depshred v1.1.0 (Target Node: ${targetNode})`)));
+    console.log(pc.bold(pc.white(`| depshred v2.0.0 (Target Node: ${targetNode})`)));
     console.log(pc.bold(pc.white(`| Project: ${projectName} (${totalDependencies} dependencies scanned)`)));
     console.log(pc.bold(pc.white('+--------------------------------------------------------------------------+')));
     console.log(pc.red(`| [CRITICAL] ${summary.critical} native replacements (saves ~${formatBytes(totalSaveableBytes)})`));

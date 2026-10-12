@@ -1,6 +1,6 @@
 {
   "name": "depshred",
-  "version": "1.1.0",
+  "version": "2.0.0",
   "description": "Shred dependency bloat. Embrace modern Node.",
   "type": "module",
   "main": "./src/cli.js",
@@ -17,7 +17,7 @@
     "LICENSE"
   ],
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=22.0.0"
   },
   "scripts": {
     "start": "node ./bin/depshred.js",
@@ -42,7 +42,5 @@
     "url": "https://github.com/gozajpeg/depshred/issues"
   },
   "homepage": "https://github.com/gozajpeg/depshred#readme",
-  "dependencies": {
-    "picocolors": "^1.1.1"
-  }
+  "dependencies": {}
 }

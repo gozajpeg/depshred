@@ -3,7 +3,7 @@ import { resolve, join, dirname } from 'node:path';
 import { copyFile, mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import readline from 'node:readline/promises';
-import pc from 'picocolors';
+import pc from './colors.js';
 import { auditProject } from './audit.js';
 import { printScorecard, evaluateExitCode } from './reporter.js';
 import { runInteractive } from './interactive.js';
@@ -77,7 +77,7 @@ export async function run(rawArgs = []) {
   }
 
   if (values.version) {
-    console.log('depshred v1.1.0');
+    console.log('depshred v2.0.0');
     return;
   }
 

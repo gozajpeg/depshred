@@ -14,6 +14,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Official GitHub Action (`depshred/action`) for automated pull request checks.
 - AST-powered automated code import rewriting for native replacements.
 
+## [2.0.0] - 2026-10-12
+
+### Changed (Breaking Changes)
+- **Minimum Node.js Runtime Raised to >=22.0.0:** `depshred` now requires Node.js 22+ to run (`engines.node: ">=22.0.0"`). This aligns with Node.js LTS maintenance cycles (Node 18 reached EOL on April 30, 2025; Node 20 reached EOL on April 30, 2026).
+  - *Note:* `depshred` continues to respect the target project's own `engines.node` setting during audits. It only recommends standard library built-ins supported by the audited project's runtime.
+
+### Removed
+- **Removed `picocolors` (True Zero Runtime Dependencies):** `package.json` now has zero runtime dependencies (`dependencies: {}`). Terminal styling is implemented natively via `node:util.styleText` in `src/colors.js`.
+- Added strict gating for `NO_COLOR`, `NODE_DISABLE_COLORS`, and non-TTY streams to prevent unneeded ANSI escape sequences in CI logs and file redirections.
+
 ## [1.1.0] - 2026-10-12
 
 ### Added

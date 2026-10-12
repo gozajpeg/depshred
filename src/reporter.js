@@ -1,4 +1,4 @@
-import pc from 'picocolors';
+import pc from './colors.js';
 import { formatBytes } from './audit.js';
 
 /**
@@ -9,7 +9,7 @@ export function printScorecard(auditData, options = {}) {
 
   console.log('');
   console.log(pc.bold(pc.white('+--------------------------------------------------------------------------+')));
-  console.log(pc.bold(pc.white(`| depshred v1.1.0 (Target Node: ${targetNode})`)));
+  console.log(pc.bold(pc.white(`| depshred v2.0.0 (Target Node: ${targetNode})`)));
   console.log(pc.bold(pc.white(`| Project: ${projectName} (${totalDependencies} dependencies scanned)`)));
   console.log(pc.bold(pc.white('+--------------------------------------------------------------------------+')));
 

@@ -66,7 +66,7 @@ export async function fetchPackageMetadata(packageName, timeoutMs = 4000) {
       signal: controller.signal,
       headers: {
         Accept: 'application/json',
-        'User-Agent': 'depshred-audit/1.1.0'
+        'User-Agent': 'depshred-audit/2.0.0'
       }
     });
 
