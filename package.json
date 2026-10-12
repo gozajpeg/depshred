@@ -29,7 +29,6 @@
     "bloat",
     "unused-dependencies",
     "cli",
-    "e18e",
     "nodejs",
     "npm"
   ],

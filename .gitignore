@@ -10,3 +10,6 @@ ROADMAP.md
 .DS_Store
 Thumbs.db
 *.log
+# Benchmark working directory & temporary clones
+benchmark/work/
+benchmark/logs/

@@ -1,0 +1,26 @@
+{
+  "metadata": {
+    "depshredCommit": "a959f57",
+    "nodeVersion": "v22.13.1",
+    "os": "win32 10.0.26200",
+    "timestamp": "2026-10-12T12:04:09.988Z",
+    "totalRepositoriesInCorpus": 25,
+    "repositoriesTested": 1
+  },
+  "results": [
+    {
+      "name": "mri",
+      "owner": "lukeed",
+      "tier": "mid-tier",
+      "category": "CLI Arg Parser",
+      "commit": "62b9ce4f25e1f7b476c99858c20882d86c010085",
+      "totalDeps": 3,
+      "flaggedUnused": 0,
+      "truePositives": 0,
+      "falsePositives": 0,
+      "falsePositiveRate": "0.0%",
+      "status": "VERIFIED",
+      "verificationDetails": []
+    }
+  ]
+}
