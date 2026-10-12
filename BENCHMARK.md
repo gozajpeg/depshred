@@ -8,10 +8,10 @@ This document tracks the verified false-positive and accuracy metrics of `depshr
 
 | Parameter | Value |
 | :--- | :--- |
-| **depshred Commit** | `a959f57` |
+| **depshred Commit** | `3631f22` |
 | **Node.js Version** | `v22.13.1` |
 | **Operating System** | `win32 10.0.26200` |
-| **Benchmark Timestamp** | `2026-10-12T12:04:09.988Z` |
+| **Benchmark Timestamp** | `2026-10-12T15:39:17.029Z` |
 | **Total Corpus Size** | 25 repositories |
 | **Tested in Run** | 1 repositories |
 

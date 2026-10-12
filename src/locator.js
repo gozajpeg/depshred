@@ -40,6 +40,36 @@ const CONFIG_FILE_PATTERNS = [
  * Normalizes an import specifier to its root npm package name.
  * e.g. "lodash/map" -> "lodash", "@scoped/pkg/deep" -> "@scoped/pkg"
  */
+/**
+ * Strips single-line and multi-line comments from JavaScript/TypeScript/Vue/Svelte code.
+ * Preserves newlines in multi-line comments so calculated line numbers remain exact.
+ */
+export function stripComments(code) {
+  return code
+    .replace(/\/\*[\s\S]*?\*\//g, (match) => {
+      const newlines = match.match(/\n/g);
+      return newlines ? newlines.join('') : ' ';
+    })
+    .replace(/\/\/[^\r\n]*/g, '');
+}
+
+/**
+ * Extracts script content from .vue and .svelte single-file components.
+ * Template markup and <style lang="scss"> are out of scope and excluded.
+ */
+export function extractScriptContent(fileContent, ext) {
+  if (ext !== '.vue' && ext !== '.svelte') {
+    return fileContent;
+  }
+  const scriptRegex = /<script(?:\s+[^>]*)?>([\s\S]*?)<\/script>/gi;
+  let combined = '';
+  let match;
+  while ((match = scriptRegex.exec(fileContent)) !== null) {
+    combined += match[1] + '\n';
+  }
+  return combined;
+}
+
 export function normalizePackageName(specifier) {
   if (!specifier || specifier.startsWith('.') || specifier.startsWith('/') || specifier.startsWith('#')) {
     return null; // Local file or subpath import
@@ -56,14 +86,14 @@ export function normalizePackageName(specifier) {
  * Regex patterns to extract imported package names from JavaScript / TypeScript code.
  */
 const IMPORT_PATTERNS = [
-  // ES Modules: import ... from 'pkg' or import 'pkg'
-  /\bimport\s+(?:[\w*\s{},$]+\s+from\s+)?['"]([^'"]+)['"]/g,
+  // ESM import: import ... from 'pkg' or import 'pkg' (handles multi-line, import type, destructuring)
+  /\bimport\s+(?:[\w*\s{},$:*]+\s+from\s+)?['"]([^'"]+)['"]/g,
+  // ESM export from: export ... from 'pkg' (handles export type { X } from 'pkg')
+  /\bexport\s+(?:[\w*\s{},$:*]+\s+from\s+)?['"]([^'"]+)['"]/g,
   // CommonJS: require('pkg')
   /\brequire\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
-  // Dynamic import: import('pkg')
-  /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g,
-  // Export from: export ... from 'pkg'
-  /\bexport\s+(?:[\w*\s{},$]+\s+from\s+)?['"]([^'"]+)['"]/g
+  // Dynamic import or type import: import('pkg')
+  /\bimport\s*\(\s*['"]([^'"]+)['"]\s*\)/g
 ];
 
 /**
@@ -289,42 +319,62 @@ export async function locateImports(rootDir, declaredDependencies = [], scripts 
     }
   }
 
-  // Rule 7: Scan project source files for import / require / export from
+  // Rule 7: Multi-line, comment-safe scan of source files for import / require / export from
   for (const filePath of sourceFiles) {
-    let content;
+    let rawContent;
     try {
-      content = await readFile(filePath, 'utf8');
+      rawContent = await readFile(filePath, 'utf8');
     } catch {
       continue;
     }
 
-    const lines = content.split(/\r?\n/);
+    const ext = extname(filePath).toLowerCase();
+    const scriptContent = extractScriptContent(rawContent, ext);
+    const cleanedCode = stripComments(scriptContent);
     const relPath = relative(rootDir, filePath).replace(/\\/g, '/');
 
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      const trimmed = line.trim();
-      if (!trimmed || trimmed.startsWith('//') || trimmed.startsWith('/*') || trimmed.startsWith('*')) {
-        continue;
+    const rawLines = rawContent.split(/\r?\n/);
+    const lineOffsets = [0];
+    for (let i = 0; i < rawContent.length; i++) {
+      if (rawContent[i] === '\n') {
+        lineOffsets.push(i + 1);
       }
+    }
 
-      for (const pattern of IMPORT_PATTERNS) {
-        pattern.lastIndex = 0;
-        let match;
-        while ((match = pattern.exec(line)) !== null) {
-          const rawSpecifier = match[1];
-          const pkg = normalizePackageName(rawSpecifier);
-          if (pkg) {
-            importedSet.add(pkg);
-            if (!importsMap.has(pkg)) {
-              importsMap.set(pkg, []);
-            }
-            importsMap.get(pkg).push({
-              file: relPath,
-              line: i + 1,
-              snippet: trimmed.slice(0, 100)
-            });
+    function getLineNumber(charIndex) {
+      let low = 0, high = lineOffsets.length - 1;
+      while (low <= high) {
+        const mid = (low + high) >> 1;
+        if (lineOffsets[mid] <= charIndex) {
+          if (mid === lineOffsets.length - 1 || lineOffsets[mid + 1] > charIndex) {
+            return mid + 1;
           }
+          low = mid + 1;
+        } else {
+          high = mid - 1;
+        }
+      }
+      return 1;
+    }
+
+    for (const pattern of IMPORT_PATTERNS) {
+      pattern.lastIndex = 0;
+      let match;
+      while ((match = pattern.exec(cleanedCode)) !== null) {
+        const rawSpecifier = match[1];
+        const pkg = normalizePackageName(rawSpecifier);
+        if (pkg) {
+          importedSet.add(pkg);
+          if (!importsMap.has(pkg)) {
+            importsMap.set(pkg, []);
+          }
+          const lineNum = getLineNumber(match.index);
+          const snippet = rawLines[lineNum - 1] ? rawLines[lineNum - 1].trim() : match[0].trim();
+          importsMap.get(pkg).push({
+            file: relPath,
+            line: lineNum,
+            snippet: snippet.slice(0, 100)
+          });
         }
       }
     }

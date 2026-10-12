@@ -180,3 +180,101 @@ test('locateImports recognizes Babel compiler infrastructure and plugins', async
   assert.ok(importsMap.has('babel-plugin-react-compiler'), 'babel-plugin-react-compiler should be recognized');
   assert.deepEqual(unusedPackages, ['unused-lib'], 'only unused-lib should be unused');
 });
+
+test('stripComments strips single-line and multi-line comments while preserving newlines', async () => {
+  const { stripComments } = await import('../src/locator.js');
+  const sample = [
+    '// import "fake-a";',
+    'const a = 1;',
+    '/* multiline',
+    'import "fake-b";',
+    '*/',
+    'const b = 2;'
+  ].join('\n');
+
+  const stripped = stripComments(sample);
+  assert.ok(!stripped.includes('fake-a'), 'Should not contain single-line comment');
+  assert.ok(!stripped.includes('fake-b'), 'Should not contain block comment');
+  assert.ok(stripped.includes('const a = 1;'));
+  assert.ok(stripped.includes('const b = 2;'));
+  assert.equal(stripped.split('\n').length, sample.split('\n').length, 'Must preserve line count for exact line numbers');
+});
+
+test('extractScriptContent extracts only script blocks from Vue and Svelte components', async () => {
+  const { extractScriptContent } = await import('../src/locator.js');
+  const vueComponent = [
+    '<template>',
+    '  <button>Click</button>',
+    '</template>',
+    '<script setup lang="ts">',
+    'import { ref } from "vue";',
+    'import { helper } from "vue-helper";',
+    '</script>',
+    '<style>',
+    'button { color: red; }',
+    '</style>'
+  ].join('\n');
+
+  const extracted = extractScriptContent(vueComponent, '.vue');
+  assert.ok(extracted.includes('vue-helper'), 'Must extract script block imports');
+  assert.ok(!extracted.includes('<template>'), 'Must exclude template block');
+  assert.ok(!extracted.includes('<style>'), 'Must exclude style block');
+});
+
+test('locateImports accurately recognizes all TypeScript type-only imports and multi-line imports', async () => {
+  const { locateImports } = await import('../src/locator.js');
+  const { writeFile, mkdir, rm } = await import('node:fs/promises');
+  const tempTestDir = resolve('./test/fixtures/ts-type-app');
+
+  await mkdir(tempTestDir, { recursive: true });
+  await writeFile(resolve(tempTestDir, 'package.json'), JSON.stringify({
+    name: 'ts-type-app',
+    dependencies: {
+      'pkg-type-import': '1.0.0',
+      'pkg-inline-type': '1.0.0',
+      'pkg-export-type': '1.0.0',
+      'pkg-multiline': '1.0.0',
+      'pkg-cjs-multiline': '1.0.0',
+      'pkg-commented-unused': '1.0.0'
+    }
+  }, null, 2));
+
+  const sampleSource = [
+    '// import "pkg-commented-unused";',
+    '/* import "pkg-commented-unused"; */',
+    'import type { User } from "pkg-type-import";',
+    'import { type Config, run } from "pkg-inline-type";',
+    'export type { Output } from "pkg-export-type";',
+    'import {',
+    '  type Item,',
+    '  processItem',
+    '} from "pkg-multiline";',
+    'const cjs = require(',
+    '  "pkg-cjs-multiline"',
+    ');'
+  ].join('\n');
+
+  await writeFile(resolve(tempTestDir, 'index.ts'), sampleSource);
+
+  try {
+    const deps = [
+      'pkg-type-import',
+      'pkg-inline-type',
+      'pkg-export-type',
+      'pkg-multiline',
+      'pkg-cjs-multiline',
+      'pkg-commented-unused'
+    ];
+    const { importsMap, unusedPackages } = await locateImports(tempTestDir, deps, {});
+
+    assert.ok(importsMap.has('pkg-type-import'), 'Should recognize import type');
+    assert.ok(importsMap.has('pkg-inline-type'), 'Should recognize import { type X, y }');
+    assert.ok(importsMap.has('pkg-export-type'), 'Should recognize export type { X }');
+    assert.ok(importsMap.has('pkg-multiline'), 'Should recognize multi-line import');
+    assert.ok(importsMap.has('pkg-cjs-multiline'), 'Should recognize multi-line require');
+
+    assert.deepEqual(unusedPackages, ['pkg-commented-unused'], 'Only commented-out package should be flagged as unused');
+  } finally {
+    await rm(tempTestDir, { recursive: true, force: true });
+  }
+});

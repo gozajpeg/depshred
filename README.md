@@ -111,6 +111,30 @@ It checks npm to see how big each package is and whether anyone has touched it i
 
 ---
 
+## Scanner Scope and Boundaries
+
+To remain fast, zero-dependency, and predictable, `depshred` defines exact boundaries for its static analysis scanner:
+
+### What is Scanned
+- **File Extensions:** `.js`, `.mjs`, `.cjs`, `.ts`, `.tsx`, `.jsx`, `.vue`, and `.svelte`.
+- **Import Syntax (Single-line & Multi-line):**
+  - Standard ESM: `import 'pkg'`, `import { foo } from 'pkg'`, `import * as foo from 'pkg'`.
+  - TypeScript Type Imports: `import type { Foo } from 'pkg'`, `import { type Foo, bar } from 'pkg'`, and `export type { Foo } from 'pkg'`.
+  - CommonJS: `require('pkg')` and multi-line `require('pkg')`.
+  - Dynamic Imports: `import('pkg')` and `await import('pkg')`.
+- **Comment Stripping:** Single-line (`//`) and multi-line (`/* ... */`) comments are stripped before analysis, ensuring commented-out code does not trigger false imports while preserving accurate line numbers.
+- **Single-File Components (.vue & .svelte):** Only content within `<script>` and `<script setup>` tags is analyzed. Template tags and `<style>` preprocessors are out of scope.
+- **Implicit Toolchain References:**
+  - CLI binaries referenced in `package.json` scripts (e.g. `"build": "rimraf dist"`).
+  - Root config files (`vite.config.*`, `tsconfig.json`, `postcss.config.*`, `.babelrc`, `eslint.config.*`).
+  - Known toolchain conventions (`@babel/*`, `babel-plugin-*`, `@vitejs/plugin-*`, `@types/*`, `eslint-plugin-*`, etc.).
+
+### What is Not Handled
+- **Computed Dynamic Imports:** Computed specifiers such as `require(computeName())` cannot be resolved statically. Ignore these using `--ignore <pkg>` or in `package.json`.
+- **Complex Monorepo Loaders:** For deeply nested monorepos with custom loaders, ingest a Knip report via `--from-knip`.
+
+---
+
 ## What packages can depshred replace?
 
 To be completely honest: no tool can replace every single package in the world. Node does not have a built-in 3D engine to replace `three.js` or a built-in database to replace `pg`.
