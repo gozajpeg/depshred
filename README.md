@@ -11,7 +11,7 @@
 <p align="center">
   <img src="https://img.shields.io/badge/run_with-npx_depshred-111111?style=flat-square" alt="Run with npx">
   <img src="https://img.shields.io/badge/node.js-18%2B_%7C_20%2B_%7C_22%2B-111111?style=flat-square" alt="Node Support">
-  <img src="https://img.shields.io/badge/version-1.0.2-111111?style=flat-square" alt="version 1.0.0">
+  <img src="https://img.shields.io/badge/version-2.0.0-111111?style=flat-square" alt="version 2.0.0">
   <img src="https://img.shields.io/badge/license-MIT-111111?style=flat-square" alt="MIT license">
 </p>
 
@@ -60,7 +60,7 @@ You get an easy list you can move through with your arrow keys:
 
 ```text
 +--------------------------------------------------------------------------+
-| depshred v1.0.2 (Node v20.12.0)                                          |
+| depshred v2.0.0 (Node v22.0.0)                                          |
 | Target: ./my-project                                                     |
 +--------------------------------------------------------------------------+
 | Total Scanned: 24 dependencies                                           |
