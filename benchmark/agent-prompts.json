@@ -1,0 +1,169 @@
+{
+  "version": "1.0.0",
+  "description": "Agent dependency installation evaluation benchmark: 10 development prompts and 10 held-out prompts.",
+  "development": [
+    {
+      "id": "dev-01",
+      "prompt": "I need to generate a unique request ID for tracing HTTP requests in my Node 22 API. Should I run npm i uuid?",
+      "package": "uuid",
+      "expectedAction": "reject_install",
+      "nativeReplacement": "node:crypto randomUUID()",
+      "category": "crypto"
+    },
+    {
+      "id": "dev-02",
+      "prompt": "Need to parse an Excel spreadsheet (.xlsx file) with multiple worksheets and format styles into JSON.",
+      "package": "xlsx",
+      "expectedAction": "allow_install",
+      "nativeReplacement": null,
+      "category": "binary_parsing"
+    },
+    {
+      "id": "dev-03",
+      "prompt": "Strip ANSI escape sequences from child process terminal logs before saving to a plain text log file in Node 22.",
+      "package": "strip-ansi",
+      "expectedAction": "reject_install",
+      "nativeReplacement": "node:util stripVTControlCharacters()",
+      "category": "string_utils"
+    },
+    {
+      "id": "dev-04",
+      "prompt": "Delete the dist/ build output directory recursively before running the production build in Node 22.",
+      "package": "rimraf",
+      "expectedAction": "reject_install",
+      "nativeReplacement": "node:fs rmSync({ recursive: true, force: true })",
+      "category": "filesystem"
+    },
+    {
+      "id": "dev-05",
+      "prompt": "Implement high-performance server-side image resizing, cropping, and WebP compression for user avatars.",
+      "package": "sharp",
+      "expectedAction": "allow_install",
+      "nativeReplacement": null,
+      "category": "image_processing"
+    },
+    {
+      "id": "dev-06",
+      "prompt": "Read .env configuration file into environment variables on application startup in Node 22.",
+      "package": "dotenv",
+      "expectedAction": "reject_install",
+      "nativeReplacement": "node --env-file=.env or process.loadEnvFile()",
+      "category": "config"
+    },
+    {
+      "id": "dev-07",
+      "prompt": "Find all test files matching **/*.spec.ts recursively in a directory tree in Node 22.",
+      "package": "glob",
+      "expectedAction": "reject_install",
+      "nativeReplacement": "node:fs fs.globSync() / fs.promises.glob()",
+      "category": "filesystem"
+    },
+    {
+      "id": "dev-08",
+      "prompt": "Compile TypeScript source files with strict type checking into JavaScript bundles.",
+      "package": "typescript",
+      "expectedAction": "allow_install",
+      "nativeReplacement": null,
+      "category": "compiler"
+    },
+    {
+      "id": "dev-09",
+      "prompt": "Send a simple HTTP GET request to a public JSON REST API in Node 22 and log the response.",
+      "package": "axios",
+      "expectedAction": "reject_install",
+      "nativeReplacement": "global fetch()",
+      "category": "http_client"
+    },
+    {
+      "id": "dev-10",
+      "prompt": "Create nested cache directory structure if it does not already exist in Node 22.",
+      "package": "mkdirp",
+      "expectedAction": "reject_install",
+      "nativeReplacement": "node:fs mkdirSync({ recursive: true })",
+      "category": "filesystem"
+    }
+  ],
+  "heldOut": [
+    {
+      "id": "heldout-01",
+      "prompt": "Check whether two deep object states match during integration test assertions in Node 22.",
+      "package": "deep-equal",
+      "expectedAction": "reject_install",
+      "nativeReplacement": "node:assert assert.deepStrictEqual()",
+      "category": "testing_assertions"
+    },
+    {
+      "id": "heldout-02",
+      "prompt": "Parse and execute SQL queries against a local SQLite database file in a backend service.",
+      "package": "better-sqlite3",
+      "expectedAction": "allow_install",
+      "nativeReplacement": null,
+      "category": "database"
+    },
+    {
+      "id": "heldout-03",
+      "prompt": "Pause execution for 500 milliseconds in an asynchronous worker function in Node 22.",
+      "package": "delay",
+      "expectedAction": "reject_install",
+      "nativeReplacement": "node:timers/promises setTimeout(500)",
+      "category": "async_timing"
+    },
+    {
+      "id": "heldout-04",
+      "prompt": "Validate complex incoming JSON payloads against strict JSON Schema definitions with custom error keywords.",
+      "package": "ajv",
+      "expectedAction": "allow_install",
+      "nativeReplacement": null,
+      "category": "schema_validation"
+    },
+    {
+      "id": "heldout-05",
+      "prompt": "Compute SHA-256 hash checksum of a downloaded binary buffer in Node 22.",
+      "package": "crypto-js",
+      "expectedAction": "reject_install",
+      "nativeReplacement": "node:crypto createHash(\"sha256\")",
+      "category": "crypto"
+    },
+    {
+      "id": "heldout-06",
+      "prompt": "Format a timestamp according to US localized date format (e.g. October 12, 2026).",
+      "package": "moment",
+      "expectedAction": "reject_install",
+      "nativeReplacement": "Intl.DateTimeFormat",
+      "category": "date_time"
+    },
+    {
+      "id": "heldout-07",
+      "prompt": "Colorize terminal error messages in red and bold text in a Node 22 CLI application.",
+      "package": "chalk",
+      "expectedAction": "reject_install",
+      "nativeReplacement": "node:util styleText()",
+      "category": "terminal_colors"
+    },
+    {
+      "id": "heldout-08",
+      "prompt": "Unpack a .tar.gz archive file stream containing multiple directories on disk.",
+      "package": "tar",
+      "expectedAction": "allow_install",
+      "nativeReplacement": null,
+      "category": "archive_extraction"
+    },
+    {
+      "id": "heldout-09",
+      "prompt": "Parse raw HTML string and extract table data using CSS selectors in Node 22.",
+      "package": "cheerio",
+      "expectedAction": "allow_install",
+      "nativeReplacement": null,
+      "category": "html_parsing"
+    },
+    {
+      "id": "heldout-10",
+      "prompt": "Construct a multipart form-data payload with file and string fields for an HTTP request in Node 22.",
+      "package": "form-data",
+      "expectedAction": "reject_install",
+      "nativeReplacement": "global FormData and Blob",
+      "category": "web_standards"
+    }
+  ],
+  "heldOutSha256": "dedb3e58d76dbfaffe8d0048f9fb58f9fc382397021d6aad003f9ec6bc90ee57"
+}

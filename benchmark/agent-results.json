@@ -1,0 +1,190 @@
+{
+  "timestamp": "2026-10-12T16:45:55.892Z",
+  "heldOutSha256": "dedb3e58d76dbfaffe8d0048f9fb58f9fc382397021d6aad003f9ec6bc90ee57",
+  "targetNode": "22.0.0",
+  "runsPerPrompt": 3,
+  "development": {
+    "totalPrompts": 10,
+    "accuracyRange": [
+      100,
+      100
+    ],
+    "accuracyMedian": 100,
+    "redundantRejectionRate": 100,
+    "falseRefusalRate": 0,
+    "details": [
+      {
+        "id": "dev-01",
+        "package": "uuid",
+        "expectedAction": "reject_install",
+        "decision": "reject_install",
+        "isCorrect": true,
+        "reason": "Native Node.js built-in available: Native crypto.randomUUID()"
+      },
+      {
+        "id": "dev-02",
+        "package": "xlsx",
+        "expectedAction": "allow_install",
+        "decision": "allow_install",
+        "isCorrect": true,
+        "reason": "No native standard library drop-in for \"xlsx\". External package permitted."
+      },
+      {
+        "id": "dev-03",
+        "package": "strip-ansi",
+        "expectedAction": "reject_install",
+        "decision": "reject_install",
+        "isCorrect": true,
+        "reason": "Native Node.js built-in available: Native util.stripVTControlCharacters()"
+      },
+      {
+        "id": "dev-04",
+        "package": "rimraf",
+        "expectedAction": "reject_install",
+        "decision": "reject_install",
+        "isCorrect": true,
+        "reason": "Native Node.js built-in available: Native fs.rmSync(path, { recursive: true, force: true })"
+      },
+      {
+        "id": "dev-05",
+        "package": "sharp",
+        "expectedAction": "allow_install",
+        "decision": "allow_install",
+        "isCorrect": true,
+        "reason": "No native standard library drop-in for \"sharp\". External package permitted."
+      },
+      {
+        "id": "dev-06",
+        "package": "dotenv",
+        "expectedAction": "reject_install",
+        "decision": "reject_install",
+        "isCorrect": true,
+        "reason": "Native Node.js built-in available: Native CLI flag node --env-file=.env"
+      },
+      {
+        "id": "dev-07",
+        "package": "glob",
+        "expectedAction": "reject_install",
+        "decision": "reject_install",
+        "isCorrect": true,
+        "reason": "Native Node.js built-in available: Native fs.globSync(pattern)"
+      },
+      {
+        "id": "dev-08",
+        "package": "typescript",
+        "expectedAction": "allow_install",
+        "decision": "allow_install",
+        "isCorrect": true,
+        "reason": "No native standard library drop-in for \"typescript\". External package permitted."
+      },
+      {
+        "id": "dev-09",
+        "package": "axios",
+        "expectedAction": "reject_install",
+        "decision": "reject_install",
+        "isCorrect": true,
+        "reason": "Native Node.js built-in available: Native global fetch()"
+      },
+      {
+        "id": "dev-10",
+        "package": "mkdirp",
+        "expectedAction": "reject_install",
+        "decision": "reject_install",
+        "isCorrect": true,
+        "reason": "Native Node.js built-in available: Native fs.mkdirSync(path, { recursive: true })"
+      }
+    ]
+  },
+  "heldOut": {
+    "totalPrompts": 10,
+    "accuracyRange": [
+      50,
+      50
+    ],
+    "accuracyMedian": 50,
+    "redundantRejectionRate": 16.666666666666664,
+    "falseRefusalRate": 0,
+    "details": [
+      {
+        "id": "heldout-01",
+        "package": "deep-equal",
+        "expectedAction": "reject_install",
+        "decision": "allow_install",
+        "isCorrect": false,
+        "reason": "No native standard library drop-in for \"deep-equal\". External package permitted."
+      },
+      {
+        "id": "heldout-02",
+        "package": "better-sqlite3",
+        "expectedAction": "allow_install",
+        "decision": "allow_install",
+        "isCorrect": true,
+        "reason": "No native standard library drop-in for \"better-sqlite3\". External package permitted."
+      },
+      {
+        "id": "heldout-03",
+        "package": "delay",
+        "expectedAction": "reject_install",
+        "decision": "allow_install",
+        "isCorrect": false,
+        "reason": "No native standard library drop-in for \"delay\". External package permitted."
+      },
+      {
+        "id": "heldout-04",
+        "package": "ajv",
+        "expectedAction": "allow_install",
+        "decision": "allow_install",
+        "isCorrect": true,
+        "reason": "No native standard library drop-in for \"ajv\". External package permitted."
+      },
+      {
+        "id": "heldout-05",
+        "package": "crypto-js",
+        "expectedAction": "reject_install",
+        "decision": "allow_install",
+        "isCorrect": false,
+        "reason": "No native standard library drop-in for \"crypto-js\". External package permitted."
+      },
+      {
+        "id": "heldout-06",
+        "package": "moment",
+        "expectedAction": "reject_install",
+        "decision": "allow_install",
+        "isCorrect": false,
+        "reason": "No native standard library drop-in for \"moment\". External package permitted."
+      },
+      {
+        "id": "heldout-07",
+        "package": "chalk",
+        "expectedAction": "reject_install",
+        "decision": "allow_install",
+        "isCorrect": false,
+        "reason": "No native standard library drop-in for \"chalk\". External package permitted."
+      },
+      {
+        "id": "heldout-08",
+        "package": "tar",
+        "expectedAction": "allow_install",
+        "decision": "allow_install",
+        "isCorrect": true,
+        "reason": "No native standard library drop-in for \"tar\". External package permitted."
+      },
+      {
+        "id": "heldout-09",
+        "package": "cheerio",
+        "expectedAction": "allow_install",
+        "decision": "allow_install",
+        "isCorrect": true,
+        "reason": "No native standard library drop-in for \"cheerio\". External package permitted."
+      },
+      {
+        "id": "heldout-10",
+        "package": "form-data",
+        "expectedAction": "reject_install",
+        "decision": "reject_install",
+        "isCorrect": true,
+        "reason": "Native Node.js built-in available: Native global FormData"
+      }
+    ]
+  }
+}
