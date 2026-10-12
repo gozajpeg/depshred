@@ -24,6 +24,41 @@ export function formatBytes(bytes) {
  * @param {boolean} options.strict - Strict mode flag
  * @returns {Promise<object>} Comprehensive audit result
  */
+/**
+ * Parse an upstream Knip JSON report.
+ */
+async function loadKnipFindings(knipPath) {
+  if (!knipPath) return new Set();
+  try {
+    const raw = await readFile(knipPath, 'utf8');
+    const data = JSON.parse(raw);
+    const knipPkgs = new Set();
+    if (Array.isArray(data.dependencies)) {
+      for (const item of data.dependencies) {
+        if (typeof item === 'string') knipPkgs.add(item);
+        else if (item && item.name) knipPkgs.add(item.name);
+      }
+    }
+    if (Array.isArray(data.devDependencies)) {
+      for (const item of data.devDependencies) {
+        if (typeof item === 'string') knipPkgs.add(item);
+        else if (item && item.name) knipPkgs.add(item.name);
+      }
+    }
+    if (Array.isArray(data.issues)) {
+      for (const issue of data.issues) {
+        if (issue && (issue.type === 'dependencies' || issue.type === 'devDependencies') && issue.name) {
+          knipPkgs.add(issue.name);
+        }
+      }
+    }
+    return knipPkgs;
+  } catch (err) {
+    console.error(`Warning: Could not read Knip report from ${knipPath}: ${err.message}`);
+    return new Set();
+  }
+}
+
 export async function auditProject(options = {}) {
   const projectDir = options.path || process.cwd();
   const pkgJsonPath = join(projectDir, 'package.json');
@@ -54,6 +89,9 @@ export async function auditProject(options = {}) {
   // Step 1: Scan imports and identify unused packages
   const { importsMap, unusedPackages, scannedFilesCount } = await locateImports(projectDir, allDeps, pkgJson.scripts || {});
   const unusedSet = new Set(unusedPackages);
+
+  // Step 1b: Load upstream Knip findings if provided
+  const knipSet = await loadKnipFindings(options.fromKnip);
 
   // Step 2: Fetch registry metrics for all dependencies
   const registryMetadata = await batchFetchMetadata(allDeps);
@@ -96,18 +134,22 @@ export async function auditProject(options = {}) {
       continue;
     }
 
-    // 1. Unused: 0 imports in source code (immediate removal, no code rewrite needed)
-    if (unusedSet.has(pkg)) {
+    // 1. Unused: 0 imports in source code or reported by upstream Knip
+    if (unusedSet.has(pkg) || knipSet.has(pkg)) {
       unusedCount++;
       totalSaveableBytes += meta.unpackedSize;
+      const isKnip = knipSet.has(pkg);
+      const detailsMsg = isKnip
+        ? `[Knip Upstream Finding] Unused dependency reported by Knip (run: npm uninstall ${pkg})`
+        : `0 imports detected in project (run: npm uninstall ${pkg})`;
       results.push({
         name: pkg,
         tier: 'UNUSED',
-        status: 'UNUSED',
+        status: isKnip ? 'KNIP_UNUSED' : 'UNUSED',
         isDev,
         size: meta.unpackedSize,
         dependenciesCount: meta.dependenciesCount,
-        details: `0 imports detected in project (run: npm uninstall ${pkg})`,
+        details: detailsMsg,
         action: `npm uninstall ${pkg}`,
         imports: []
       });

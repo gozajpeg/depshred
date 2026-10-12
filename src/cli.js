@@ -7,6 +7,7 @@ import pc from './colors.js';
 import { auditProject } from './audit.js';
 import { printScorecard, evaluateExitCode } from './reporter.js';
 import { runInteractive } from './interactive.js';
+import { checkPackageUsage, printCheckReport, EXIT_CODES } from './checker.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -26,6 +27,10 @@ ${pc.bold('OPTIONS:')}
   --dormant-years <n>   Threshold in years to flag unmaintained packages (default: 3).
   --ignore <pkgs>       Comma-separated list of packages to ignore.
   --init-skill [target] Install depshred skill into project (cursor|copilot|windsurf|claude|cline|antigravity|all).
+  --from-knip <path>    Ingest upstream Knip JSON report (knip --reporter json).
+
+COMMANDS:
+  check <package>       Inspect API usage of a specific package and emit verdict (safe|not a drop-in|can't determine).
   -h, --help            Show command help.
   -v, --version         Show version number.
 
@@ -56,6 +61,7 @@ export async function run(rawArgs = []) {
     'dormant-years': { type: 'string', default: '3' },
     ignore: { type: 'string' },
     'init-skill': { type: 'string' },
+    'from-knip': { type: 'string' },
     help: { type: 'boolean', short: 'h', default: false },
     version: { type: 'boolean', short: 'v', default: false }
   };
@@ -81,6 +87,23 @@ export async function run(rawArgs = []) {
     return;
   }
 
+  // Handle "depshred check <package>" command
+  if (positionals[0] === 'check') {
+    const pkgName = positionals[1];
+    if (!pkgName) {
+      console.error(pc.red('Error: Please specify package to check. Usage: depshred check <package>'));
+      process.exit(1);
+    }
+    const checkDir = resolve(values.path || positionals[2] || process.cwd());
+    const report = await checkPackageUsage(checkDir, pkgName);
+    if (values.json) {
+      console.log(JSON.stringify(report, null, 2));
+    } else {
+      printCheckReport(report);
+    }
+    process.exit(EXIT_CODES[report.verdict] ?? 1);
+  }
+
   // Handle skill installation command
   if (values['init-skill'] !== undefined) {
     await handleInitSkill(values['init-skill']);
@@ -97,7 +120,8 @@ export async function run(rawArgs = []) {
       path: targetPath,
       dormantYears,
       ignore: ignoreList,
-      strict: values.strict
+      strict: values.strict,
+      fromKnip: values['from-knip']
     });
 
     if (values.json) {

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { resolve } from 'node:path';
 import { auditProject } from '../src/audit.js';
+import { checkPackageUsage, EXIT_CODES } from '../src/checker.js';
 import { getNativeRule, getAltRule, compareVersions } from '../src/rules/index.js';
 
 test('compareVersions accurately compares semantic versions', () => {
@@ -276,5 +277,111 @@ test('locateImports accurately recognizes all TypeScript type-only imports and m
     assert.deepEqual(unusedPackages, ['pkg-commented-unused'], 'Only commented-out package should be flagged as unused');
   } finally {
     await rm(tempTestDir, { recursive: true, force: true });
+  }
+});
+
+
+test('checkPackageUsage emits accurate verdicts for axios (safe vs not a drop-in vs cannot determine)', async () => {
+  const { mkdtemp, writeFile, rm } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+
+  const tempDir = await mkdtemp(join(tmpdir(), 'depshred-check-axios-'));
+
+  try {
+    await writeFile(join(tempDir, 'package.json'), JSON.stringify({
+      name: 'axios-check-fixture',
+      dependencies: { axios: '^1.7.0' }
+    }));
+
+    // 1. Safe case: direct axios.get
+    await writeFile(join(tempDir, 'app.js'), 'import axios from "axios";\nconst res = await axios.get("https://example.com");');
+    const safeReport = await checkPackageUsage(tempDir, 'axios');
+    assert.equal(safeReport.verdict, 'safe');
+    assert.equal(EXIT_CODES[safeReport.verdict], 0);
+    assert.ok(safeReport.behaviorDifferences.length > 0, 'Should outline behavior differences like 4xx/5xx rejection');
+
+    // 2. Not a drop-in: interceptors
+    await writeFile(join(tempDir, 'app.js'), 'import axios from "axios";\naxios.interceptors.request.use(cfg => cfg);');
+    const unsafeReport = await checkPackageUsage(tempDir, 'axios');
+    assert.equal(unsafeReport.verdict, 'not a drop-in');
+    assert.equal(EXIT_CODES[unsafeReport.verdict], 2);
+    assert.ok(unsafeReport.reason.includes('interceptors'));
+
+    // 3. Can\'t determine: axios.create instance
+    await writeFile(join(tempDir, 'app.js'), 'import axios from "axios";\nconst client = axios.create();\nclient.get("/data");');
+    const ambiguousReport = await checkPackageUsage(tempDir, 'axios');
+    assert.equal(ambiguousReport.verdict, "can't determine");
+    assert.equal(EXIT_CODES[ambiguousReport.verdict], 1);
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+test('checkPackageUsage emits accurate verdicts for uuid (safe v4 vs not a drop-in v1)', async () => {
+  const { mkdtemp, writeFile, rm } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+
+  const tempDir = await mkdtemp(join(tmpdir(), 'depshred-check-uuid-'));
+
+  try {
+    await writeFile(join(tempDir, 'package.json'), JSON.stringify({
+      name: 'uuid-check-fixture',
+      dependencies: { uuid: '^9.0.0' }
+    }));
+
+    // 1. Safe: uuid v4
+    await writeFile(join(tempDir, 'app.js'), 'import { v4 as uuidv4 } from "uuid";\nconst id = uuidv4();');
+    const safeReport = await checkPackageUsage(tempDir, 'uuid');
+    assert.equal(safeReport.verdict, 'safe');
+    assert.equal(EXIT_CODES[safeReport.verdict], 0);
+
+    // 2. Not a drop-in: uuid v1
+    await writeFile(join(tempDir, 'app.js'), 'import { v1 } from "uuid";\nconst id = v1();');
+    const unsafeReport = await checkPackageUsage(tempDir, 'uuid');
+    assert.equal(unsafeReport.verdict, 'not a drop-in');
+    assert.equal(EXIT_CODES[unsafeReport.verdict], 2);
+    assert.ok(unsafeReport.reason.includes('non-v4'));
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+test('auditProject ingests upstream Knip report via --from-knip flag', async () => {
+  const { mkdtemp, writeFile, rm } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+
+  const tempDir = await mkdtemp(join(tmpdir(), 'depshred-knip-test-'));
+
+  try {
+    await writeFile(join(tempDir, 'package.json'), JSON.stringify({
+      name: 'knip-fixture',
+      dependencies: {
+        'active-dep': '^1.0.0',
+        'knip-flagged-dep': '^2.0.0'
+      }
+    }, null, 2));
+
+    await writeFile(join(tempDir, 'index.js'), 'import "active-dep";\nconsole.log("running");');
+
+    const knipReportPath = join(tempDir, 'knip-report.json');
+    await writeFile(knipReportPath, JSON.stringify({
+      dependencies: ['knip-flagged-dep']
+    }, null, 2));
+
+    const audit = await auditProject({
+      path: tempDir,
+      fromKnip: knipReportPath
+    });
+
+    const knipFinding = audit.results.find(item => item.name === 'knip-flagged-dep');
+    assert.ok(knipFinding, 'knip-flagged-dep should be identified');
+    assert.equal(knipFinding.tier, 'UNUSED');
+    assert.equal(knipFinding.status, 'KNIP_UNUSED');
+    assert.ok(knipFinding.details.includes('[Knip Upstream Finding]'), 'Details must label [Knip Upstream Finding]');
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
   }
 });
