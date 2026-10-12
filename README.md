@@ -156,6 +156,9 @@ Instead, `depshred` targets the **most common sources of accidental bloat**: leg
 | **`ora`** | `yocto-spinner` | Saves ~200 KB unpacked, zero sub-dependencies |
 | **`qs`** | Native `URLSearchParams` | Saves ~200 KB unpacked for standard flat queries |
 
+> **Suggestions are optional, not requirements:**  
+> If `depshred` flags a package like `zod` or `yargs` and suggests an alternative, you do not have to change it. If your project relies on specific ecosystem plugins, advanced features, or team habits that your current library provides, keep using it. Suggestions are meant to highlight lightweight options when building new modules or trimming bundles. You can permanently silence any warning with `--ignore <pkg>` or by adding it to `"depshred": { "ignore": [...] }` in your `package.json`.
+>
 > *Everything else in your project is still scanned for 0-import unused packages, heavy sizes (>5MB), and unmaintained/abandoned code (>3 years old).*
 
 ---
@@ -231,6 +234,9 @@ Pretty much any modern Node.js project:
 ---
 
 ## Questions you might have
+
+**What if I prefer the package that depshred flagged?**  
+Keep it. `depshred` gives advice based on disk size and modern Node features, but you know your project best. If a flagged package (such as `zod`, `yargs`, or `moment`) is the right choice for your architecture or has integrations you need, you can safely ignore the recommendation or permanently allowlist it in your `package.json` ignore settings.
 
 **Does it change my code automatically?**  
 No. `depshred` never touches your code behind your back. It shows you the file, the line number, and the built-in Node replacement. You decide what to change and when.
