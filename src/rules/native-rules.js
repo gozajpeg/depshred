@@ -397,5 +397,82 @@ import timers from 'timers';
 // After (uninstall npm package, import native core):
 import timers from 'node:timers';`,
     replacement: "import timers from 'node:timers';"
-  }
+  },
+  {
+    name: 'chalk',
+    minNode: '22.0.0',
+    description: 'Native node:util styleText()',
+    diff: `// Before:
+import chalk from 'chalk';
+console.log(chalk.red.bold('Error'));
+
+// After (Node 22+):
+import { styleText } from 'node:util';
+console.log(styleText(['red', 'bold'], 'Error'));`,
+    replacement: "import { styleText } from 'node:util';"
+  },
+  {
+    name: 'deep-equal',
+    minNode: '12.0.0',
+    description: 'Native node:assert assert.deepStrictEqual()',
+    diff: `// Before:
+import deepEqual from 'deep-equal';
+const isEqual = deepEqual(objA, objB);
+
+// After:
+import assert from 'node:assert';
+assert.deepStrictEqual(objA, objB);`,
+    replacement: "import assert from 'node:assert';"
+  },
+  {
+    name: 'delay',
+    minNode: '15.0.0',
+    description: 'Native node:timers/promises setTimeout()',
+    diff: `// Before:
+import delay from 'delay';
+await delay(1000);
+
+// After:
+import { setTimeout } from 'node:timers/promises';
+await setTimeout(1000);`,
+    replacement: "import { setTimeout } from 'node:timers/promises';"
+  },
+  {
+    name: 'sleep-promise',
+    minNode: '15.0.0',
+    description: 'Native node:timers/promises setTimeout()',
+    diff: `// Before:
+import sleep from 'sleep-promise';
+await sleep(1000);
+
+// After:
+import { setTimeout } from 'node:timers/promises';
+await setTimeout(1000);`,
+    replacement: "import { setTimeout } from 'node:timers/promises';"
+  },
+  {
+    name: 'crypto-js',
+    minNode: '16.0.0',
+    description: 'Native node:crypto or Web Crypto API',
+    diff: `// Before:
+import CryptoJS from 'crypto-js';
+const hash = CryptoJS.SHA256(data).toString();
+
+// After:
+import { createHash } from 'node:crypto';
+const hash = createHash('sha256').update(data).digest('hex');`,
+    replacement: "import { createHash } from 'node:crypto';"
+  },
+  {
+    name: 'moment',
+    minNode: '14.0.0',
+    description: 'Native Intl.DateTimeFormat and Date API',
+    diff: `// Before:
+import moment from 'moment';
+const formatted = moment().format('LL');
+
+// After (built-in Intl):
+const formatted = new Intl.DateTimeFormat('en-US', { dateStyle: 'long' }).format(new Date());`,
+    replacement: "new Intl.DateTimeFormat('en-US', options).format(date)"
+  },
 ];

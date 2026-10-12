@@ -257,6 +257,12 @@ Pretty much any modern Node.js project:
 
 ---
 
+## Empirical Benchmarks
+
+False-positive rates and agent decision benchmarks are verified against real open-source repositories and held-out test prompts. See [BENCHMARK.md](file:///BENCHMARK.md) for complete methodology, corpus metadata, and run scorecards.
+
+---
+
 ## Questions you might have
 
 **What if I prefer the package that depshred flagged?**  
