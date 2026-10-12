@@ -25,6 +25,69 @@ test('getNativeRule checks version support boundaries', () => {
   assert.equal(globOn22.isSupported, true, 'glob should be supported on Node 22');
 });
 
+test('getNativeRule detects modern web standards and Node utilities', () => {
+  const formData = getNativeRule('form-data', '18.0.0');
+  assert.ok(formData, 'form-data rule must exist');
+  assert.equal(formData.isSupported, true, 'form-data is supported in Node 18+');
+
+  const crossFetch = getNativeRule('cross-fetch', '18.0.0');
+  assert.ok(crossFetch, 'cross-fetch rule must exist');
+  assert.equal(crossFetch.isSupported, true, 'cross-fetch is supported in Node 18+');
+
+  const stripAnsi18 = getNativeRule('strip-ansi', '18.0.0');
+  assert.ok(stripAnsi18);
+  assert.equal(stripAnsi18.isSupported, false, 'strip-ansi requires Node 20.13.0+');
+
+  const stripAnsi22 = getNativeRule('strip-ansi', '22.0.0');
+  assert.equal(stripAnsi22.isSupported, true, 'strip-ansi is supported in Node 22+');
+
+  const minimist16 = getNativeRule('minimist', '16.0.0');
+  assert.equal(minimist16.isSupported, false, 'minimist requires Node 18.3.0+ for parseArgs');
+
+  const minimist18 = getNativeRule('minimist', '18.3.0');
+  assert.equal(minimist18.isSupported, true, 'minimist is supported in Node 18.3.0+');
+
+  const isPromise = getNativeRule('is-promise', '18.0.0');
+  assert.ok(isPromise);
+  assert.equal(isPromise.isSupported, true);
+
+  const leftPad = getNativeRule('left-pad', '18.0.0');
+  assert.ok(leftPad);
+  assert.equal(leftPad.isSupported, true);
+});
+
+test('getNativeRule detects core module shadows', () => {
+  const shadows = ['path', 'crypto', 'url', 'buffer', 'os', 'fs', 'util', 'events', 'string_decoder', 'timers'];
+  for (const mod of shadows) {
+    const rule = getNativeRule(mod, '18.0.0');
+    assert.ok(rule, `shadow rule for ${mod} should exist`);
+    assert.equal(rule.isSupported, true, `shadow rule for ${mod} should be supported`);
+    assert.ok(rule.description.includes('shadowing'), `description should flag shadowing for ${mod}`);
+  }
+});
+
+test('getAltRule recommends lightweight alternatives', () => {
+  const zodRule = getAltRule('zod');
+  assert.ok(zodRule);
+  assert.equal(zodRule.lighter, 'valibot');
+
+  const requestRule = getAltRule('request');
+  assert.ok(requestRule);
+  assert.ok(requestRule.description.includes('fetch'));
+
+  const bluebirdRule = getAltRule('bluebird');
+  assert.ok(bluebirdRule);
+  assert.equal(bluebirdRule.lighter, 'native Promise');
+
+  const yargsRule = getAltRule('yargs');
+  assert.ok(yargsRule);
+  assert.ok(yargsRule.lighter.includes('parseArgs'));
+
+  const oraRule = getAltRule('ora');
+  assert.ok(oraRule);
+  assert.equal(oraRule.lighter, 'yocto-spinner');
+});
+
 test('auditProject audits depshred self correctly', async () => {
   const projectDir = resolve('.');
   const result = await auditProject({ path: projectDir });
@@ -106,11 +169,4 @@ test('locateImports recognizes Babel compiler infrastructure and plugins', async
   assert.ok(importsMap.has('@babel/core'), '@babel/core should be recognized as compiler engine');
   assert.ok(importsMap.has('babel-plugin-react-compiler'), 'babel-plugin-react-compiler should be recognized');
   assert.deepEqual(unusedPackages, ['unused-lib'], 'only unused-lib should be unused');
-});
-
-test('getAltRule recommends valibot for zod', () => {
-  const rule = getAltRule('zod');
-  assert.ok(rule, 'zod should have an alternative rule');
-  assert.equal(rule.lighter, 'valibot');
-  assert.ok(rule.description.includes('valibot'));
 });

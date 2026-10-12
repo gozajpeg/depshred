@@ -44,5 +44,41 @@ export const ALT_RULES = [
     lighter: 'fast-deep-equal',
     description: 'Legacy recursive comparison. Replace with fast-deep-equal (sub-1KB, faster) or native assert.deepStrictEqual.',
     savings: '~80% faster and 0 sub-dependencies'
+  },
+  {
+    name: 'request',
+    lighter: 'fetch / ky',
+    description: 'Deprecated HTTP client (~5MB unpacked). Replace with native global fetch() or ky.',
+    savings: '~5MB unpacked'
+  },
+  {
+    name: 'superagent',
+    lighter: 'fetch / ky',
+    description: 'Heavy legacy HTTP client (~1.8MB unpacked). Replace with native global fetch() or ky.',
+    savings: '~1.8MB unpacked'
+  },
+  {
+    name: 'bluebird',
+    lighter: 'native Promise',
+    description: 'Legacy Promise library (~1.5MB unpacked). Replace with native V8 Promise and async/await.',
+    savings: '~1.5MB unpacked'
+  },
+  {
+    name: 'yargs',
+    lighter: 'node:util parseArgs / citty',
+    description: 'Heavy CLI parser (~2.5MB unpacked). Replace with native node:util parseArgs() or citty.',
+    savings: '~2.5MB unpacked'
+  },
+  {
+    name: 'ora',
+    lighter: 'yocto-spinner',
+    description: 'Terminal spinner with large dependency tree. Replace with yocto-spinner (sub-5KB) or native console writes.',
+    savings: '~200KB unpacked'
+  },
+  {
+    name: 'qs',
+    lighter: 'URLSearchParams',
+    description: 'Query string parser (~200KB unpacked). For standard flat queries, replace with native URLSearchParams.',
+    savings: '~200KB unpacked'
   }
 ];

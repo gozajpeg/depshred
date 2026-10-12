@@ -1,6 +1,6 @@
 {
   "name": "depshred",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Shred dependency bloat. Embrace modern Node.",
   "type": "module",
   "main": "./src/cli.js",

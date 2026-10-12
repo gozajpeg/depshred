@@ -21,10 +21,15 @@ Before reaching for npm, verify if modern Node.js already includes this function
 | Recursive folder deletion | `rimraf` | `fs.rmSync(path, { recursive: true, force: true })` | Node 14.14.0+ |
 | Recursive directory creation | `mkdirp` | `fs.mkdirSync(path, { recursive: true })` | Node 10.12.0+ |
 | Development file watching | `nodemon` | `node --watch server.js` | Node 18.11.0+ |
-| HTTP requests | `axios`, `node-fetch` | Native global `fetch()` | Node 18.0.0+ |
+| HTTP requests | `axios`, `node-fetch`, `cross-fetch` | Native global `fetch()` | Node 18.0.0+ |
+| Multipart / Form Data | `form-data` | Native global `FormData` | Node 18.0.0+ |
+| ANSI color stripping | `strip-ansi` | `util.stripVTControlCharacters()` from `node:util` | Node 20.13.0+ / 22+ |
+| Array flattening | `array-flatten` | Native `Array.prototype.flat(Infinity)` | Node 11.0.0+ |
+| CLI argument parsing | `minimist`, `yargs-parser` | `parseArgs` from `node:util` | Node 18.3.0+ |
 | File glob matching | `glob` | `fs.globSync(pattern)` from `node:fs` | Node 22.0.0+ |
 | URL query parameters | `querystring` | `URLSearchParams` / `new URL()` | Node 10.0.0+ |
-
+| Micro-utilities | `is-promise`, `left-pad`, `is-odd` | Native language operators and methods | Node 8.0.0+ |
+| Core module shadows | `path`, `crypto`, `fs`, `os`, `buffer` | Built-in `node:<module>` (do not install from npm) | Node 14.18+ / 16+ |
 If the target Node version supports the native feature, **do not install any package**. Write the native implementation directly.
 
 ---

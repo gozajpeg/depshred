@@ -128,8 +128,15 @@ Instead, `depshred` targets the **most common sources of accidental bloat**: leg
 | **`nodemon`** | `node --watch` | Node 18.11+ | `node --watch app.js` |
 | **`axios`** | `fetch()` | Node 18+ | Native `fetch` and `AbortController` |
 | **`node-fetch`** | `fetch()` | Node 18+ | Native `fetch` and `AbortController` |
+| **`form-data`** | `FormData` | Node 18+ | Native global `FormData` (zero imports) |
+| **`cross-fetch`** / **`isomorphic-fetch`** | `fetch()` | Node 18+ | Native global `fetch()` (zero imports) |
+| **`strip-ansi`** | `util.stripVTControlCharacters()` | Node 20.13+ / 22+ | Native `node:util` ANSI stripping |
+| **`array-flatten`** | `Array.prototype.flat()` | Node 11+ | Built-in `items.flat(Infinity)` |
+| **`minimist`** / **`yargs-parser`** | `util.parseArgs()` | Node 18.3+ | Built-in CLI arg parser in `node:util` |
 | **`glob`** | `fs.glob()` | Node 22+ | Native file matching in `node:fs` |
 | **`querystring`** | `URLSearchParams` | Node 10+ | Built-in `URLSearchParams` |
+| **`is-promise`** / **`left-pad`** / **`is-odd`** | Native JavaScript | Node 8+ | Built-in language operators and methods |
+| **`path`**, **`crypto`**, **`fs`**, **`os`**, **`buffer`** | `node:<module>` | Node 14.18+ / 16+ | Core module shadows (uninstall redundant npm packages) |
 
 ### 2. Lightweight modern alternatives
 
@@ -138,10 +145,16 @@ Instead, `depshred` targets the **most common sources of accidental bloat**: leg
 | **`zod`** | `valibot` or `arktype` | Saves ~5.5 MB unpacked (~90% bundle size reduction) |
 | **`moment`** | `dayjs` or native `Intl` | Saves ~4 MB unpacked |
 | **`lodash`** | `es-toolkit` or modern JS | Saves ~1.5 MB unpacked |
+| **`request`** | Native `fetch` or `ky` | Saves ~5 MB unpacked (deprecated package) |
+| **`superagent`** | Native `fetch` or `ky` | Saves ~1.8 MB unpacked |
+| **`bluebird`** | Native `Promise` / async-await | Saves ~1.5 MB unpacked (native V8 runtime) |
+| **`yargs`** | `node:util parseArgs` or `citty` | Saves ~2.5 MB unpacked |
 | **`chalk`** | `picocolors` | Saves ~100 KB and drops dependency chain |
 | **`classnames`** | `clsx` | Drop-in API, faster, zero dependencies |
 | **`bcrypt`** | `bcryptjs` or native `crypto` | Removes heavy C++ `node-gyp` build tools |
 | **`deep-equal`** | `fast-deep-equal` | Sub-1KB, faster comparisons |
+| **`ora`** | `yocto-spinner` | Saves ~200 KB unpacked, zero sub-dependencies |
+| **`qs`** | Native `URLSearchParams` | Saves ~200 KB unpacked for standard flat queries |
 
 > *Everything else in your project is still scanned for 0-import unused packages, heavy sizes (>5MB), and unmaintained/abandoned code (>3 years old).*
 
