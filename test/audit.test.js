@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { resolve } from 'node:path';
 import { auditProject } from '../src/audit.js';
 import { checkPackageUsage, EXIT_CODES } from '../src/checker.js';
+import { generateMigrationPatch, generateUnifiedDiff } from '../src/patcher.js';
 import { getNativeRule, getAltRule, compareVersions } from '../src/rules/index.js';
 
 test('compareVersions accurately compares semantic versions', () => {
@@ -381,6 +382,86 @@ test('auditProject ingests upstream Knip report via --from-knip flag', async () 
     assert.equal(knipFinding.tier, 'UNUSED');
     assert.equal(knipFinding.status, 'KNIP_UNUSED');
     assert.ok(knipFinding.details.includes('[Knip Upstream Finding]'), 'Details must label [Knip Upstream Finding]');
+  } finally {
+    await rm(tempDir, { recursive: true, force: true });
+  }
+});
+
+test('generateUnifiedDiff generates valid diff between two strings', () => {
+  const diff = generateUnifiedDiff(
+    'sample.js',
+    'const a = 1;\nconst b = 2;\n',
+    'const a = 1;\nconst b = 3;\n'
+  );
+  assert.ok(diff.includes('--- a/sample.js'));
+  assert.ok(diff.includes('+++ b/sample.js'));
+  assert.ok(diff.includes('-const b = 2;'));
+  assert.ok(diff.includes('+const b = 3;'));
+});
+
+test('generateMigrationPatch generates valid patch that passes git apply --check', async () => {
+  const { mkdtemp, writeFile, readFile, rm } = await import('node:fs/promises');
+  const { tmpdir } = await import('node:os');
+  const { join } = await import('node:path');
+  const { execSync } = await import('node:child_process');
+
+  const tempDir = await mkdtemp(join(tmpdir(), 'depshred-patch-test-'));
+
+  try {
+    // 1. Initialize git repo
+    execSync('git init', { cwd: tempDir });
+    execSync('git config user.name "Tester"', { cwd: tempDir });
+    execSync('git config user.email "test@example.com"', { cwd: tempDir });
+
+    const initialPkg = JSON.stringify({
+      name: 'patch-fixture',
+      dependencies: {
+        uuid: '^9.0.0',
+        rimraf: '^3.0.2',
+        express: '^4.19.0'
+      }
+    }, null, 2) + '\n';
+
+    const initialSrc = [
+      'import { v4 } from "uuid";',
+      'import rimraf from "rimraf";',
+      '',
+      'export function cleanup(target) {',
+      '  const id = v4();',
+      '  rimraf.sync(target);',
+      '  return id;',
+      '}'
+    ].join('\n') + '\n';
+
+    await writeFile(join(tempDir, 'package.json'), initialPkg, 'utf8');
+    await writeFile(join(tempDir, 'index.js'), initialSrc, 'utf8');
+
+    execSync('git add . && git commit -m "initial commit"', { cwd: tempDir });
+
+    // 2. Generate patch via depshred patcher
+    const patchResult = await generateMigrationPatch(tempDir);
+    assert.ok(patchResult.patchPath, 'Patch file must be created');
+    assert.ok(patchResult.removedPackages.includes('uuid'));
+    assert.ok(patchResult.removedPackages.includes('rimraf'));
+
+    // 3. Verify patch passes git apply --check in CI mode
+    assert.doesNotThrow(() => {
+      execSync('git apply --check depshred-migration.patch', { cwd: tempDir });
+    }, 'Patch must cleanly pass git apply --check');
+
+    // 4. Apply patch and verify content
+    execSync('git apply depshred-migration.patch', { cwd: tempDir });
+
+    const updatedPkg = JSON.parse(await readFile(join(tempDir, 'package.json'), 'utf8'));
+    assert.equal(updatedPkg.dependencies.uuid, undefined, 'uuid removed from package.json');
+    assert.equal(updatedPkg.dependencies.rimraf, undefined, 'rimraf removed from package.json');
+    assert.equal(updatedPkg.dependencies.express, '^4.19.0', 'express retained');
+
+    const updatedSrc = await readFile(join(tempDir, 'index.js'), 'utf8');
+    assert.ok(updatedSrc.includes("import { randomUUID } from 'node:crypto';"));
+    assert.ok(updatedSrc.includes("import { rmSync } from 'node:fs';"));
+    assert.ok(updatedSrc.includes('rmSync(target);'));
+    assert.ok(updatedSrc.includes('const id = randomUUID();'));
   } finally {
     await rm(tempDir, { recursive: true, force: true });
   }

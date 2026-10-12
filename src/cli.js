@@ -8,6 +8,7 @@ import { auditProject } from './audit.js';
 import { printScorecard, evaluateExitCode } from './reporter.js';
 import { runInteractive } from './interactive.js';
 import { checkPackageUsage, printCheckReport, EXIT_CODES } from './checker.js';
+import { generateMigrationPatch } from './patcher.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -28,6 +29,7 @@ ${pc.bold('OPTIONS:')}
   --ignore <pkgs>       Comma-separated list of packages to ignore.
   --init-skill [target] Install depshred skill into project (cursor|copilot|windsurf|claude|cline|antigravity|all).
   --from-knip <path>    Ingest upstream Knip JSON report (knip --reporter json).
+  --patch [file]        Generate a unified git patch file (default: depshred-migration.patch).
 
 COMMANDS:
   check <package>       Inspect API usage of a specific package and emit verdict (safe|not a drop-in|can't determine).
@@ -62,6 +64,7 @@ export async function run(rawArgs = []) {
     ignore: { type: 'string' },
     'init-skill': { type: 'string' },
     'from-knip': { type: 'string' },
+    patch: { type: 'string' },
     help: { type: 'boolean', short: 'h', default: false },
     version: { type: 'boolean', short: 'v', default: false }
   };
@@ -124,13 +127,30 @@ export async function run(rawArgs = []) {
       fromKnip: values['from-knip']
     });
 
+    let patchResult = null;
+    if (values.patch !== undefined) {
+      const patchFileName = typeof values.patch === 'string' && values.patch ? values.patch : undefined;
+      patchResult = await generateMigrationPatch(targetPath, { outputFileName: patchFileName });
+    }
+
     if (values.json) {
-      console.log(JSON.stringify(auditData, null, 2));
+      const outputJson = patchResult ? { ...auditData, patch: patchResult } : auditData;
+      console.log(JSON.stringify(outputJson, null, 2));
       process.exit(values.check ? evaluateExitCode(auditData, values.strict) : 0);
     }
 
     if (isNoInteractive) {
       printScorecard(auditData);
+      if (patchResult) {
+        if (patchResult.patchPath) {
+          console.log(pc.green(`\nMigration patch generated: ${patchResult.patchPath}`));
+          console.log(pc.gray(`Changed files: ${patchResult.changedFiles.join(', ')}`));
+          console.log(pc.gray(`Verify with:  git apply --check ${patchResult.patchPath}`));
+          console.log(pc.gray(`Apply with:   git apply ${patchResult.patchPath}\n`));
+        } else {
+          console.log(pc.gray('\nNo mechanical native migrations detected. No patch generated.\n'));
+        }
+      }
       if (values.check) {
         process.exit(evaluateExitCode(auditData, values.strict));
       }
@@ -140,6 +160,10 @@ export async function run(rawArgs = []) {
     const interactiveLaunched = await runInteractive(auditData);
     if (!interactiveLaunched) {
       printScorecard(auditData);
+      if (patchResult && patchResult.patchPath) {
+        console.log(pc.green(`\nMigration patch generated: ${patchResult.patchPath}`));
+        console.log(pc.gray(`Verify with: git apply --check ${patchResult.patchPath}\n`));
+      }
     }
   } catch (err) {
     console.error(pc.red(`Audit error: ${err.message}`));
