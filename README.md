@@ -60,7 +60,7 @@ You get an easy list you can move through with your arrow keys:
 
 ```text
 +--------------------------------------------------------------------------+
-| depshred v1.1.0 (Node v22.0.0)                                          |
+| depshred v1.1.1 (Node v22.0.0)                                          |
 | Target: ./my-project                                                     |
 +--------------------------------------------------------------------------+
 | Total Scanned: 24 dependencies                                           |

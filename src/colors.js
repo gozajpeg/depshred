@@ -18,9 +18,12 @@ function color(style) {
   return (text) => (isColorSupported ? styleText(style, String(text)) : String(text));
 }
 
-export const pc = {
+const baseColors = {
   bold: color('bold'),
   dim: color('dim'),
+  italic: color('italic'),
+  underline: color('underline'),
+  strikethrough: color('strikethrough'),
   red: color('red'),
   green: color('green'),
   yellow: color('yellow'),
@@ -30,5 +33,16 @@ export const pc = {
   gray: color('gray'),
   blue: color('blue')
 };
+
+// Defensive Proxy: if any unknown formatting property is accessed,
+// return a no-op identity function rather than throwing TypeError.
+export const pc = new Proxy(baseColors, {
+  get(target, prop) {
+    if (typeof prop === 'string' && prop in target) {
+      return target[prop];
+    }
+    return (text) => String(text);
+  }
+});
 
 export default pc;

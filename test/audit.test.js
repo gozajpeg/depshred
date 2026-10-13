@@ -112,7 +112,14 @@ test('colors helper formats and respects gating', async () => {
   assert.equal(typeof pc.magenta, 'function');
   assert.equal(typeof pc.white, 'function');
   assert.equal(typeof pc.gray, 'function');
+  assert.equal(typeof pc.blue, 'function');
+  assert.equal(typeof pc.underline, 'function', 'underline must be a callable function');
+  assert.equal(typeof pc.italic, 'function');
+  assert.equal(typeof pc.strikethrough, 'function');
+  assert.equal(typeof pc.nonExistentStyle, 'function', 'Proxy must fallback safely for unknown styles');
   assert.equal(typeof pc.bold('hello'), 'string');
+  assert.equal(typeof pc.underline('hello'), 'string');
+  assert.equal(pc.nonExistentStyle('hello'), 'hello');
 });
 
 test('auditProject audits legacy-app fixture with unused and native replacements', async () => {

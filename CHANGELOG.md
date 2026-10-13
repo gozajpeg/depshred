@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.1] - 2026-10-14
+
+### Fixed
+- Added missing `underline` formatting method in native colors helper (`src/colors.js`) to resolve `pc.underline is not a function` error during interactive TUI navigation.
+- Implemented defensive Proxy fallback in colors helper to safely handle any unknown or missing style methods with a callable identity function.
+
 ## [1.1.0] - 2026-10-13
 
 ### Added
