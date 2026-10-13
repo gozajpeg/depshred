@@ -1,4 +1,4 @@
-﻿# Internal planning & personal agent instructions
+# Internal planning & personal agent instructions
 PLAN.md
 AGENT.md
 ROADMAP.md
@@ -11,3 +11,8 @@ ROADMAP.md
 .clinerules
 .windsurfrules
 *.log
+
+# Benchmarks
+BENCHMARK.md
+benchmark/
+scripts/

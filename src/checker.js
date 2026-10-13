@@ -1,5 +1,5 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { readFile, stat } from 'node:fs/promises';
+import { join, dirname } from 'node:path';
 import { locateImports, stripComments, extractScriptContent } from './locator.js';
 import { getNativeRule } from './rules/index.js';
 import pc from './colors.js';
@@ -17,7 +17,18 @@ export const EXIT_CODES = {
 };
 
 export async function checkPackageUsage(projectDir, packageName) {
-  const pkgJsonPath = join(projectDir, 'package.json');
+  let dir = projectDir || process.cwd();
+  try {
+    const st = await stat(dir);
+    if (st.isFile()) {
+      dir = dirname(dir);
+    }
+  } catch {
+    if (dir.endsWith('package.json') || dir.endsWith('.json')) {
+      dir = dirname(dir);
+    }
+  }
+  const pkgJsonPath = join(dir, 'package.json');
   let pkgJson;
   try {
     const raw = await readFile(pkgJsonPath, 'utf8');
@@ -212,7 +223,7 @@ function analyzeUuidUsage(fileContents, occurrences) {
       package: 'uuid',
       isDeclared: true,
       verdict: VERDICTS.SAFE,
-      reason: 'Only UUID v4 generation detected. 100% replaceable with native crypto.randomUUID().',
+      reason: 'Only UUID v4 generation detected. Directly replaceable with native crypto.randomUUID().',
       behaviorDifferences: [
         'crypto.randomUUID() is built into Node.js (15.6.0+) and modern browsers with zero external packages.'
       ],

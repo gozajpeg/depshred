@@ -466,3 +466,18 @@ test('generateMigrationPatch generates valid patch that passes git apply --check
     await rm(tempDir, { recursive: true, force: true });
   }
 });
+
+
+test('auditProject and checkPackageUsage accept direct package.json file path as target', async () => {
+  const fixturePkgJson = resolve('./test/fixtures/legacy-app/package.json');
+  
+  // Test auditProject with direct package.json path
+  const result = await auditProject({ path: fixturePkgJson });
+  assert.equal(result.projectName, 'legacy-app');
+  assert.equal(result.totalDependencies, 3);
+  assert.equal(result.summary.critical, 2);
+
+  // Test checkPackageUsage with direct package.json path
+  const checkResult = await checkPackageUsage(fixturePkgJson, 'uuid');
+  assert.equal(checkResult.verdict, 'safe');
+});

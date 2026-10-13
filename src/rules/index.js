@@ -1,4 +1,4 @@
-﻿import { NATIVE_RULES } from './native-rules.js';
+import { NATIVE_RULES } from './native-rules.js';
 import { ALT_RULES } from './alt-rules.js';
 
 /**

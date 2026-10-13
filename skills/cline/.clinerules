@@ -1,4 +1,4 @@
-﻿# depshred: Agent Dependency Hygiene & Pre-Flight Vetting
+# depshred: Agent Dependency Hygiene & Pre-Flight Vetting
 
 When an agent is tasked with adding functionality to a Node.js project, it MUST NOT blindly run `npm install <package>`. Follow this mandatory 4-step pre-flight vetting order:
 

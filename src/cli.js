@@ -1,5 +1,6 @@
 import { parseArgs } from 'node:util';
 import { resolve, join, dirname } from 'node:path';
+import { statSync } from 'node:fs';
 import { copyFile, mkdir } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import readline from 'node:readline/promises';
@@ -42,6 +43,20 @@ ${pc.bold('EXAMPLES:')}
   npx depshred --init-skill cursor
   npx depshred ./path/to/your-project --json
 `;
+
+function normalizeTargetDir(inputPath) {
+  const resolved = resolve(inputPath || process.cwd());
+  try {
+    if (statSync(resolved).isFile()) {
+      return dirname(resolved);
+    }
+  } catch {
+    if (resolved.endsWith('package.json') || resolved.endsWith('.json')) {
+      return dirname(resolved);
+    }
+  }
+  return resolved;
+}
 
 export async function run(rawArgs = []) {
   const args = [...rawArgs];
@@ -97,7 +112,7 @@ export async function run(rawArgs = []) {
       console.error(pc.red('Error: Please specify package to check. Usage: depshred check <package>'));
       process.exit(1);
     }
-    const checkDir = resolve(values.path || positionals[2] || process.cwd());
+    const checkDir = normalizeTargetDir(values.path || positionals[2] || process.cwd());
     const report = await checkPackageUsage(checkDir, pkgName);
     if (values.json) {
       console.log(JSON.stringify(report, null, 2));
@@ -113,7 +128,7 @@ export async function run(rawArgs = []) {
     return;
   }
 
-  const targetPath = resolve(values.path || positionals[0] || process.cwd());
+  const targetPath = normalizeTargetDir(values.path || positionals[0] || process.cwd());
   const dormantYears = Number(values['dormant-years']) || 3;
   const ignoreList = values.ignore ? values.ignore.split(',').map((s) => s.trim()) : [];
   const isNoInteractive = values['no-interactive'] || values.check || values.json || !process.stdout.isTTY;
@@ -184,7 +199,6 @@ async function handleInitSkill(target) {
     windsurf: { name: 'Windsurf (.windsurf/rules/depshred.md)', src: 'windsurf/depshred.md', dest: '.windsurf/rules/depshred.md' },
     claude: { name: 'Claude Code (CLAUDE.md)', src: 'claude/CLAUDE.md', dest: 'CLAUDE.md' },
     cline: { name: 'Cline / Roo Code (.clinerules)', src: 'cline/.clinerules', dest: '.clinerules' },
-    antigravity: { name: 'Google Antigravity (.agents/skills/depshred/SKILL.md)', src: 'antigravity/SKILL.md', dest: '.agents/skills/depshred/SKILL.md' },
     antigravity: { name: 'Google Antigravity (.agents/skills/depshred/SKILL.md)', src: 'antigravity/SKILL.md', dest: '.agents/skills/depshred/SKILL.md' },
     agents: { name: 'Universal AGENTS.md (AGENTS.md)', src: 'agents/AGENTS.md', dest: 'AGENTS.md' },
     universal: { name: 'Universal Agent (.agents/skills/depshred/SKILL.md)', src: 'antigravity/SKILL.md', dest: '.agents/skills/depshred/SKILL.md' }

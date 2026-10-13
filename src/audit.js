@@ -1,5 +1,5 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { readFile, stat } from 'node:fs/promises';
+import { join, dirname } from 'node:path';
 import { locateImports } from './locator.js';
 import { batchFetchMetadata } from './registry.js';
 import { getNativeRule, getAltRule } from './rules/index.js';
@@ -60,7 +60,17 @@ async function loadKnipFindings(knipPath) {
 }
 
 export async function auditProject(options = {}) {
-  const projectDir = options.path || process.cwd();
+  let projectDir = options.path || process.cwd();
+  try {
+    const st = await stat(projectDir);
+    if (st.isFile()) {
+      projectDir = dirname(projectDir);
+    }
+  } catch {
+    if (projectDir.endsWith('package.json') || projectDir.endsWith('.json')) {
+      projectDir = dirname(projectDir);
+    }
+  }
   const pkgJsonPath = join(projectDir, 'package.json');
 
   let pkgJson;

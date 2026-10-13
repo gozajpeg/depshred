@@ -1,4 +1,4 @@
-﻿---
+---
 name: depshred
 description: Pre-installation dependency hygiene and vetting for Node.js. Forces agents to check for native Node.js standard library built-ins, existing project utilities, and lightweight alternatives before running npm install or yarn/pnpm add.
 ---

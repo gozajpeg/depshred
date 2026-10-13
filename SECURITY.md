@@ -6,8 +6,8 @@ Only the latest major version of `depshred` receives security updates and vulner
 
 | Version | Supported |
 | :--- | :--- |
-| **2.x.x** | Yes |
-| < 2.0.0 | No |
+| **1.x.x** | Yes |
+| < 1.0.0 | No |
 
 ## Reporting a Vulnerability
 

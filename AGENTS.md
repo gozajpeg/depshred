@@ -1,4 +1,4 @@
-﻿# depshred: AI Coding Agent Operating Instructions
+# depshred: AI Coding Agent Operating Instructions
 
 This file instructs AI coding agents (Claude, Cursor, Copilot, Antigravity, OpenHands, Devin) on how to work on and maintain the `depshred` codebase.
 

@@ -20,10 +20,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - TypeScript type-only imports and exports (`import type`, `import { type X }`, `export type`).
   - Single-file component script extraction (extracts only `<script>` blocks from `.vue` and `.svelte` files, ignoring templates and styles).
   - Comment stripping that preserves newlines so reported line numbers remain exact.
-- **Empirical False-Positive & Agent Benchmarks:**
-  - 25-repository corpus and automated health verification harness (`scripts/benchmark-harness.mjs`).
-  - 20-scenario agent prompt evaluation suite (10 dev, 10 held-out) with SHA-256 integrity hash committed in git.
-  - Published benchmark methodology, corpus metadata, and scorecards in `BENCHMARK.md`.
 - **Expanded Native Standard Library Rules:**
   - Added replacements for `chalk` (`node:util.styleText`), `deep-equal` (`node:assert.deepStrictEqual`), `delay` / `sleep-promise` (`node:timers/promises`), `crypto-js` / `sha.js` (`node:crypto`), and `moment` (`Intl.DateTimeFormat`).
   - Web standards: `form-data` -> global `FormData`, `cross-fetch` / `isomorphic-fetch` / `whatwg-fetch` -> global `fetch()`.
@@ -41,7 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Removed `picocolors` (`dependencies: {}` in `package.json`).
   - Native terminal styling implemented in `src/colors.js` on `node:util.styleText` with strict gating for `NO_COLOR`, `NODE_DISABLE_COLORS`, and non-TTY streams.
 - **CI Matrix & Security Policy:**
-  - Added GitHub Actions matrix across Node 22, 24, and 26 with automated zero-runtime-dependency assertion.
+  - Added GitHub Actions matrix across Node 18, 20, and 22 with automated zero-runtime-dependency assertion.
   - Added release workflow with npm provenance (`.github/workflows/release.yml`).
   - Added `SECURITY.md` vulnerability disclosure policy.
 
@@ -73,7 +69,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.0] - 2026-10-09
 
 ### Added
-- Universal dependency auditing scanning 100% of declared packages in `package.json`.
+- Universal dependency auditing scanning all declared packages in `package.json`.
 - Native Node.js standard library replacement detection for Node 18, 20, and 22+ built-ins (`dotenv`, `uuid`, `rimraf`, `mkdirp`, `nodemon`, `axios`, `glob`, `querystring`).
 - Unused dependency detection mapping 0-import packages with copy-ready `npm uninstall` commands.
 - `package.json` script command scanning to prevent false-positive unused warnings on CLI tools.

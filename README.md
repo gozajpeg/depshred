@@ -60,7 +60,7 @@ You get an easy list you can move through with your arrow keys:
 
 ```text
 +--------------------------------------------------------------------------+
-| depshred v2.0.0 (Node v22.0.0)                                          |
+| depshred v1.1.0 (Node v22.0.0)                                          |
 | Target: ./my-project                                                     |
 +--------------------------------------------------------------------------+
 | Total Scanned: 24 dependencies                                           |
@@ -254,12 +254,6 @@ Pretty much any modern Node.js project:
 - **Any module style:** Both `import` (ES Modules) and `require` (CommonJS).
 - **JavaScript and TypeScript:** `.js`, `.ts`, `.jsx`, `.tsx`, `.mjs`, `.cjs`.
 - **Projects with multiple folders:** Works with monorepos using the `--path` flag.
-
----
-
-## Empirical Benchmarks
-
-False-positive rates and agent decision benchmarks are verified against real open-source repositories and held-out test prompts. See [BENCHMARK.md](file:///BENCHMARK.md) for complete methodology, corpus metadata, and run scorecards.
 
 ---
 

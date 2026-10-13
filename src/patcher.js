@@ -1,5 +1,5 @@
-import { readFile, writeFile } from 'node:fs/promises';
-import { resolve, join, relative, isAbsolute } from 'node:path';
+import { readFile, writeFile, stat } from 'node:fs/promises';
+import { resolve, join, relative, isAbsolute, dirname } from 'node:path';
 import { readdirSync, statSync, readFileSync, writeFileSync } from 'node:fs';
 
 /**
@@ -144,7 +144,18 @@ function findSourceFiles(dir, fileList = []) {
  * Never modifies project source files directly.
  */
 export async function generateMigrationPatch(projectDir, options = {}) {
-  const pkgJsonPath = join(projectDir, 'package.json');
+  let dir = projectDir || process.cwd();
+  try {
+    const st = await stat(dir);
+    if (st.isFile()) {
+      dir = dirname(dir);
+    }
+  } catch {
+    if (dir.endsWith('package.json') || dir.endsWith('.json')) {
+      dir = dirname(dir);
+    }
+  }
+  const pkgJsonPath = join(dir, 'package.json');
   let originalPkgRaw;
   try {
     originalPkgRaw = await readFile(pkgJsonPath, 'utf8');

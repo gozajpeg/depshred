@@ -1,4 +1,4 @@
-﻿---
+---
 description: Node.js dependency hygiene and pre-flight vetting. Never install redundant packages when Node stdlib has built-in replacements.
 globs: **/package.json, **/*.js, **/*.ts, **/*.mjs, **/*.cjs, **/*.tsx, **/*.jsx
 alwaysApply: true
