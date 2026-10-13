@@ -86,7 +86,7 @@ export async function run(rawArgs = []) {
   }
 
   if (values.version) {
-    console.log('depshred v2.0.0');
+    console.log('depshred v1.1.0');
     return;
   }
 
